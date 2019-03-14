@@ -1,0 +1,28 @@
+COMPILATION:
+This program has been written and tested on gl17 lab machine.
+Make sure to call premake4 gmake and make before running.
+
+Documentation:
+Added new files VarHolder.hpp and VarHolder.cpp that holds static variables for cmd_line commands.
+
+Features:
+-B to show bounding box around meshes.
+-M to run without multi-threading
+-R {number of reflections to do} to run with reflections
+
+ex)Running ../A4 from Assets folder:
+../A4 sample.lua -B -M -R 2
+
+Runtime comparisons:
+nonhier.lua with 3 reflections:
+Without multithread -> 14.261s
+With multithread -> 2.46504s
+
+macho-cows.lua with 3 reflections:
+Without multithread -> 99.6723s
+With multithread -> 16.4794s
+
+hier.lua with 5 reflections:
+Without multithread -> 17.0356s
+With multithread -> 2.92017s
+

@@ -1,0 +1,55 @@
+// Fall 2018
+
+#pragma once
+
+#include <glm/glm.hpp>
+#include "polyroots.hpp"
+
+class Primitive {
+  public:
+    virtual ~Primitive();
+    virtual bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal);
+};
+
+class Sphere : public Primitive {
+  public:
+    virtual ~Sphere();
+    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) override;
+};
+
+class Cube : public Primitive {
+  public:
+    virtual ~Cube();
+    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) override;
+};
+
+class NonhierSphere : public Primitive {
+  public:
+    NonhierSphere(const glm::vec3& pos, double radius)
+      : m_pos(pos), m_radius(radius)
+    {
+    }
+    virtual ~NonhierSphere();
+    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) override;
+
+  private:
+    glm::vec3 m_pos;
+    double m_radius;
+};
+
+class NonhierBox : public Primitive {
+  public:
+    NonhierBox(const glm::vec3& pos, double size)
+      : m_pos(pos), m_size(size)
+    {
+    }
+    
+    virtual ~NonhierBox();
+    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) override;
+
+  private:
+    glm::vec3 m_pos;
+    double m_size;
+};
+
+glm::vec3 getPointAt(glm::vec3 origin, glm::vec3 slope, double t);
