@@ -7,6 +7,8 @@ using namespace std;
 using namespace glm;
 
 static float PI = 3.14159265359f;
+static int numPixels;
+static int progress;
 
 void A5_Render(
 		// What to render  
@@ -30,6 +32,8 @@ void A5_Render(
 	// Fill in raytracing code here...  
 	int pwidth = image.width();
 	int pheight = image.height();
+	numPixels = pwidth * pheight;
+	progress = 0;
 
 	glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
 
@@ -38,6 +42,8 @@ void A5_Render(
 	vec3 *pixelColors = new vec3[w*h];
 
     auto start = std::chrono::system_clock::now();
+
+	system("setterm -cursor off");
 
 	if (VarHolder::useThread) {
 		cout << "Initializing threads... " << endl;
@@ -51,13 +57,10 @@ void A5_Render(
 			myThreads.push_back(std::move(t));
 		} else {
 			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient);
-			cout << x*100 / w << "\%" << endl;
 		}
 	}
 
 	if (VarHolder::useThread) {
-		int total = myThreads.size();
-		int count;
 		for (int i = 0; i < myThreads.size(); i++)
 		{
 			std::thread & th = myThreads.at(i);
@@ -65,9 +68,7 @@ void A5_Render(
 				th.join();
 				myThreads.erase(myThreads.begin() + i);
 
-				cout << count*100 / total << "\%" << endl;
 				i--;
-				count++;
 			}
 		}
 	}
@@ -88,24 +89,10 @@ void A5_Render(
 	std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-    std::cout << "finished computation at " << std::ctime(&end_time)
+    std::cout << "\rFinished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
- 	// std::cout << "Calling A4_Render(\n" <<
-	// 	  "\t" << *root <<
-    //       "\t" << "Image(width:" << image.width() << ", height:" << image.height() << ")\n"
-    //       "\t" << "eye:  " << glm::to_string(eye) << std::endl <<
-	// 	  "\t" << "view: " << glm::to_string(view) << std::endl <<
-	// 	  "\t" << "up:   " << glm::to_string(up) << std::endl <<
-	// 	  "\t" << "fovy: " << fovy << std::endl <<
-    //       "\t" << "ambient: " << glm::to_string(ambient) << std::endl <<
-	// 	  "\t" << "lights{" << std::endl;
-
-	// for(const Light * light : lights) {
-	// 	cout << "\t\t" <<  *light << std::endl;
-	// }
-	// std::cout << "\t}" << std::endl;
-	// std::cout <<")" << std::endl;
+	system("setterm -cursor on");
 }
 
 void setPixelOfImage(
@@ -137,6 +124,9 @@ void setPixelOfImage(
 			pixelColors[y*h + x][1] = colorHere[1];
 			pixelColors[y*h + x][2] = colorHere[2];
 		}
+
+		progress++;
+		printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
 	}
 }
 
