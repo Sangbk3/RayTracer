@@ -1,6 +1,7 @@
 // Winter 2019
 
 #include "Primitive.hpp"
+#include <iostream>
 
 Primitive::~Primitive()
 {
@@ -76,10 +77,12 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
     size_t numroot = quadraticRoots(aterm, bterm, cterm, roots);
     if (numroot == 1) {
         t = roots[0];
+        // std::cout << t << " \n";
         normal = (ori + slope*((float) t))/((float) m_radius);
         return true;
     } else if (numroot == 2) {
         t = glm::min(roots[0], roots[1]);
+        // std::cout << t << " \n";
         normal = (ori + slope*((float) t))/((float) m_radius);
         return true;
     }

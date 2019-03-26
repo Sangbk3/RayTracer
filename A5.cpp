@@ -43,7 +43,7 @@ void A5_Render(
 
     auto start = std::chrono::system_clock::now();
 
-	GridSubdivision *gridSubdivision = new GridSubdivision(root, 3);
+	GridSubdivision *gridSubdivision = new GridSubdivision(root, 0);
 
 	system("setterm -cursor off");
 
