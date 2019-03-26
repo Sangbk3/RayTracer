@@ -10,6 +10,14 @@ bool Primitive::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::ve
     return false;
 }
 
+NonhierSphere *Primitive::getBoundingSphere() {
+    return boundingSphere;
+}
+
+Sphere::Sphere() {
+    boundingSphere = new NonhierSphere(glm::vec3(0, 0, 0), 1);
+}
+
 Sphere::~Sphere()
 {
     
@@ -34,77 +42,25 @@ bool Sphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 
     return false;
 }
 
+Cube::Cube() {
+    boundingSphere = new NonhierSphere(glm::vec3(0.5f, 0.5f, 0.5f), 1);
+}
+
 Cube::~Cube()
 {
 }
 bool Cube::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
     NonhierBox b = NonhierBox(glm::vec3(0.0, 0.0, 0.0), 1);
     return b.intersects(origin, slope, t, normal);
-    /*glm::vec3 cori = glm::vec3(0,0,0);
-    double clen = 1.0;
-    bool result = false;
-
-    // t = 0;
-
-    double tz0 = (-cori[2])/slope[2];
-    glm::vec3 z0 = getPointAt(cori, slope, tz0);
-    bool intFront = z0[0] >= 0 && z0[0] <= clen && z0[1] >= 0 && z0[1] <= clen;
-    if ((tz0 > 0.001) && intFront && (tz0 < t || !result)) {
-        t = tz0;
-        normal = glm::vec3(0, 0, -1.f);
-        result = true;
-    }
-
-    double tz1 = (clen - cori[2])/slope[2];
-    glm::vec3 z1 = getPointAt(cori, slope, tz1);
-    bool intBack = z1[0] >= 0 && z1[0] <= clen && z1[1] >= 0 && z1[1] <= clen;
-    if ((tz1 > 0.001) && intBack && (tz1 < t || !result)) {
-        t = tz1;
-        normal = glm::vec3(0, 0, 1.f);
-        result = true;
-    }
-
-    double ty0 = (-cori[1])/slope[1];
-    glm::vec3 y0 = getPointAt(cori, slope, ty0);
-    bool intBot = y0[0] >= 0 && y0[0] <= clen && y0[2] >= 0 && y0[2] <= clen;
-    if ((ty0 > 0.001) && intBot && (ty0 < t || !result)) {
-        t = ty0;
-        normal = glm::vec3(0, -1.f, 0);
-        result = true;
-    }
-
-    double ty1 = (clen - cori[1])/slope[1];
-    glm::vec3 y1 = getPointAt(cori, slope, ty1);
-    bool intTop = y1[0] >= 0 && y1[0] <= clen && y1[2] >= 0 && y1[2] <= clen;
-    if ((ty1 > 0.001) && intTop && (ty1 < t || !result)) {
-        t = ty1;
-        normal = glm::vec3(0, 1.f, 0);
-        result = true;
-    }
-
-    double tx0 = (-cori[0])/slope[0];
-    glm::vec3 x0 = getPointAt(cori, slope, tx0);
-    bool intLeft = x0[2] >= 0 && x0[2] <= clen && x0[1] >= 0 && x0[1] <= clen;
-    if ((tx0 > 0.001) && intLeft && (tx0 < t || !result)) {
-        t = tx0;
-        normal = glm::vec3(-1.f, 0, 0);
-        result = true;
-    }
-
-    double tx1 = (clen - cori[0])/slope[0];
-    glm::vec3 x1 = getPointAt(cori, slope, tx1);
-    bool intRight = x1[2] >= 0 && x1[2] <= clen && x1[1] >= 0 && x1[1] <= clen;
-    if ((tx1 > 0.001) && intRight && (tx1 < t || !result)) {
-        t = tx1;
-        normal = glm::vec3(1.f, 0, 0);
-        result = true;
-    }
-
-    return result;*/
 }
 
 glm::vec3 getPointAt(glm::vec3 origin, glm::vec3 slope, double t) {
     return glm::vec3(origin[0] + slope[0] * t, origin[1] + slope[1] * t, origin[2] + slope[2] * t);
+}
+
+NonhierSphere::NonhierSphere(const glm::vec3& pos, double radius)
+      : m_pos(pos), m_radius(radius) {
+    boundingSphere = this;
 }
 
 NonhierSphere::~NonhierSphere()
@@ -129,6 +85,11 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
     }
     
     return false;
+}
+
+NonhierBox::NonhierBox(const glm::vec3& pos, double size)
+      : m_pos(pos), m_size(size) {
+    boundingSphere = new NonhierSphere(pos + glm::vec3(size/2.0, size/2.0, size/2.0), glm::distance(pos, glm::vec3(size/2.0, size/2.0, size/2.0)));
 }
 
 NonhierBox::~NonhierBox()

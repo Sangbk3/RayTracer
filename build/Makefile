@@ -78,6 +78,7 @@ OBJECTS := \
 	$(OBJDIR)/Image.o \
 	$(OBJDIR)/Main.o \
 	$(OBJDIR)/A5.o \
+	$(OBJDIR)/GridSubdivision.o \
 
 RESOURCES := \
 
@@ -178,6 +179,9 @@ $(OBJDIR)/Main.o: ../Main.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/A5.o: ../A5.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/GridSubdivision.o: ../GridSubdivision.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 

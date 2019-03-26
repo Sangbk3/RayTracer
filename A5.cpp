@@ -43,6 +43,8 @@ void A5_Render(
 
     auto start = std::chrono::system_clock::now();
 
+	GridSubdivision *gridSubdivision = new GridSubdivision(root, 3);
+
 	system("setterm -cursor off");
 
 	if (VarHolder::useThread) {
@@ -53,10 +55,10 @@ void A5_Render(
 		//With Threads
 		if (VarHolder::useThread) {
 
-			std::thread t(setPixelOfImage, pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient);
+			std::thread t(setPixelOfImage, pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
 			myThreads.push_back(std::move(t));
 		} else {
-			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient);
+			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
 		}
 	}
 
@@ -97,7 +99,7 @@ void A5_Render(
 
 void setPixelOfImage(
 	glm::mat4 pixelToWorldTransform, int x, int h, vec3 *pixelColors, glm::vec3 eye,
-	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient) {
+	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient, GridSubdivision *gridSubdivision) {
 		
 	for (int y = 0; y < h; y++) {
 		glm::vec4 pixel = glm::vec4(x, y, 0, 1);
@@ -111,7 +113,9 @@ void setPixelOfImage(
 		glm::vec3 ks;
 		double shininess;
 		bool result = false;
-		getClosestObjectPoint(root, eye, m, t, normal, kd, ks, shininess, result, glm::mat4(1.f));
+		// getClosestObjectPoint(root, eye, m, t, normal, kd, ks, shininess, result, glm::mat4(1.f));
+		Material *mat;
+		getClosestObjectPointUseGrid(root, eye, m, t, normal, result, mat, gridSubdivision);
 
 		if (!result) {
 			pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
@@ -126,8 +130,36 @@ void setPixelOfImage(
 		}
 
 		progress++;
-		printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
+		// printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
 	}
+}
+
+void getClosestObjectPointUseGrid(
+	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
+	float &t, glm::vec3 &normal, bool &result, Material *mat,
+	GridSubdivision *gridSubdivision) {
+
+	gridSubdivision->do3DDDA(origin, slope, t, normal, mat, result);
+
+	// if (node->m_nodeType == NodeType::GeometryNode) {
+	// 	double temp;
+	// 	glm::vec3 tempn;
+	// 	GeometryNode *casted = static_cast<GeometryNode*>(node);
+
+	// 	if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn) && temp > 0.001) {
+	// 		if (!result || t > temp) {
+	// 			// std::cout << temp << std::endl;
+	// 			t = temp;
+	// 			normal = normalize(glm::vec3(glm::transpose(newT) * glm::vec4(tempn, 0)));
+	// 			PhongMaterial *mat = static_cast<PhongMaterial*>(casted->m_material);
+	// 			kd = mat->m_kd;
+	// 			ks = mat->m_ks;
+	// 			shininess = mat->m_shininess;
+
+	// 			result = true;
+	// 		}
+	// 	}
+	// }
 }
 
 void getClosestObjectPoint(

@@ -15,6 +15,7 @@
 #include "Light.hpp"
 #include "Image.hpp"
 #include "VarHolder.hpp"
+#include "GridSubdivision.hpp"
 
 
 void A5_Render(
@@ -37,13 +38,19 @@ void A5_Render(
 );
 void setPixelOfImage(
 	glm::mat4 pixelToWorldTransform, int x, int h, glm::vec3 *pixelColors, glm::vec3 eye,
-	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient);
+	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient, GridSubdivision *gridSubdivision);
 
 glm::mat4 getPixelToWorldTransform(Image image, double fovy, glm::vec3 view, glm::vec3 up, glm::vec3 eye);
 void getClosestObjectPoint(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
 	float &t, glm::vec3 &normal, glm::vec3& kd, glm::vec3& ks,
 	 double &shininess, bool &result, glm::mat4 parentInv);
+
+void getClosestObjectPointUseGrid(
+	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
+	float &t, glm::vec3 &normal, bool &result, Material *mat,
+	 GridSubdivision *gridSubdivision);
+
 glm::vec3 getColorAtPoint(
 	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 normal, glm::vec3 kd, glm::vec3 ks, double shininess, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
