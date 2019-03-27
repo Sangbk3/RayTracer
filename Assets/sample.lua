@@ -56,6 +56,6 @@ mickey_instance:set_material(blue)
 
 
 gr.render(scene,
-	  'sample-b.png', 4048, 4048,
+	  'sample-b.png', 1024, 1024,
 	  {0, 2, 30}, {0, 0, -1}, {0, 1, 0}, 70,
       {0.4, 0.4, 0.4}, {gr.light({0, 200, 300}, {1.0, 1.0, 1.0}, {1, 0, 0})})

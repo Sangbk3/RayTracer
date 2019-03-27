@@ -44,7 +44,7 @@ void A5_Render(
 	GridSubdivision *gridSubdivision;
 
 	if (VarHolder::useSubdivision) {
-		gridSubdivision = new GridSubdivision(root, VarHolder::subdivideDepth);
+		gridSubdivision = new GridSubdivision(root, VarHolder::subdivideDepth, eye, view, fovy, pwidth / pheight);
 	}
 
     auto start = std::chrono::system_clock::now();

@@ -5,7 +5,9 @@
 
 using namespace std;
 
-GridSubdivision::GridSubdivision( SceneNode * root, int depth ) {
+static float PI = 3.14159265359f;
+
+GridSubdivision::GridSubdivision( SceneNode * root, int depth, glm::vec3 eye, glm::vec3 view, float fov, float aspect ) {
     //make nonhier copy
     GridSubdivision::convertToNonHier(root, glm::mat4(1.f), glm::mat4(1.f));
 
@@ -15,48 +17,29 @@ GridSubdivision::GridSubdivision( SceneNode * root, int depth ) {
     }
 
     findSceneBorder(xmin, xmax, ymin, ymax, zmin, zmax);
+    if (view[2] >= 0) {
+        zmin = eye[2];
+    } else {
+        zmax = eye[2];
+    }
+	float height = (zmax - zmin)*tanf(PI * fov/360);
+    ymax = eye[1] + height;
+    ymin = eye[1] - height;
+    xmax = eye[0] + height*aspect;
+    xmin = eye[0] - height*aspect;
 
     lattice.resize(pow(8, depth));
     subdivide(indices, depth, 0, 0, 0, depth);
 
     totalDepth = depth;
-
-    for (int i = 0; i < pow(2, depth); i++) {
-        for (int j = 0; j < pow(2, depth); j++) {
-            for (int k = 0; k < pow(2, depth); k++) {
-                if (lattice.at(i*pow(4,depth) + j*pow(2,depth) + k).size() >= 0) {
-                    for (uint ind : lattice.at(i*pow(4,depth) + j*pow(2,depth) + k)) {
-                        std::cout << ind << ' ';
-                    }
-                    std::cout << " / ";
-                }
-            }
-        }
-        std::cout << std::endl;
-    }
-
-    // for (ConvertedNode *node : convertedNodes) {
-    //     for (float bound : node->boundaries) {
-    //         cout << bound << " ";
-    //     }
-    //     cout << endl;
-        
-    //     // cout << glm::to_string(node->trans) << endl;
-    // }
-
-    // cout << xmin << " " << xmax << " " << ymin << " " << ymax << " " << zmin << " " << zmax << " " << endl;
 }
 
-    // static int count = 0;
 void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, SceneNode **rNode, bool &result) {
     glm::vec3 position;
     
 	std::unordered_set<uint> checkedIndices;
 
-    // count ++;
-
     if (origin[0] > xmax || origin[0] < xmin || origin[1] > ymax || origin[1] < ymin || origin[2] > zmax || origin[2] < zmin) {
-        // cout << "eye out of grid" << slope[2] << endl;
         float minT;
         glm::vec3 test;
         bool isFirst = true;
@@ -170,23 +153,14 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
         errZ = (zmin + (gridk + 1)*distZ) - position[2];
         tZ = -tZ;
     }
-
-    // int iterat = 0;
     
     while (gridi < numRows && gridj < numRows && gridk < numRows && gridi >= 0 && gridj >= 0 && gridk >= 0) {
-        // cout << glm::to_string(slope) << " " << gridi << " " << gridj << " " << gridk << endl;
-        // cout << iterat++ << endl;
 
         checkIntersection(gridi, gridj, gridk, origin, slope, t, normal, rNode, checkedIndices, result);
-        // if (result) {
-        //     break;
-        // }
 
         float xt = (tX*(distX - errX))/distX;
-        float yt = (tY*(distY - errY))/distY; // amount of time left for y to complete the step
+        float yt = (tY*(distY - errY))/distY;
         float zt = (tZ*(distZ - errZ))/distZ;
-
-        // cout << glm::to_string(position) << " " << xt << " " << yt << " " << zt << endl;
 
         if ((yt < 0.001 || xt < yt) && (zt < 0.001 || xt < zt) && slope[0] != 0 && xt > 0.001) {
             position = position + slope*xt;
@@ -230,9 +204,7 @@ void GridSubdivision::checkIntersection(
     float &t, glm::vec3 &normal, SceneNode **rNode, std::unordered_set<uint> &checkedIndices, bool &result) {
 
     for (uint ind : lattice.at(i*pow(4, totalDepth) + j*pow(2, totalDepth) + k)) {
-        // cout << ind << endl;
         if (checkedIndices.find(ind) != checkedIndices.end()) {
-            // cout << "continuing : " << ind << endl;
             continue;
         }
         ConvertedNode *conv = convertedNodes.at(ind);
@@ -245,15 +217,9 @@ void GridSubdivision::checkIntersection(
             glm::vec3 invO = glm::vec3(conv->invTrans*glm::vec4(origin, 1));
             glm::vec3 invM = glm::vec3(conv->invTrans*glm::vec4(slope, 0));
 
-            // if (ind == )
-
             if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.001) {
 
                 if (!result || t > temp) {
-
-                    // if (result && (first11 == 0 || first11 == 1 || first11 == 2)) {
-                    //     cout << node->m_name << " : " << temp << " " << (*rNode)->m_name << " : " << t << endl;
-                    // }
                     t = temp;
 
                     normal = normalize(glm::vec3(glm::transpose(conv->invTrans) * glm::vec4(tempn, 0)));
@@ -291,7 +257,6 @@ void GridSubdivision::subdivide(std::vector<uint> objIndices, int depth, int i, 
             std::vector<float> bounds = convertedNodes.at(index)->boundaries;
 
             //boundaries: smallx, bigx, smally, bigy, smallz, bigz
-            cout<< "index: " << index << " x: "  << xmid << " " << bounds.at(0) << " " << bounds.at(1) <<  " y: " <<  ymid << " " << bounds.at(2) << " " << bounds.at(3)<<  " z: "  <<  zmid << " " << bounds.at(4) << " " << bounds.at(5) << endl;
             if (xmid > bounds.at(0)) {
                 if (ymid > bounds.at(2)) {
                     if (zmid > bounds.at(4)) {

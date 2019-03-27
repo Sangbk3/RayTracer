@@ -23,7 +23,7 @@ struct ConvertedNode {
 
 class GridSubdivision {
 public:
-    GridSubdivision( SceneNode *root, int depth );
+    GridSubdivision( SceneNode *root, int depth, glm::vec3 eye, glm::vec3 view, float fov, float aspect );
     void checkIntersection(
         int i, int j, int k, glm::vec3 origin, glm::vec3 slope,
         float &t, glm::vec3 &normal, SceneNode **rNode,
