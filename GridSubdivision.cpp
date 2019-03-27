@@ -7,19 +7,23 @@ using namespace std;
 
 GridSubdivision::GridSubdivision( SceneNode * root, int depth ) {
     //make nonhier copy
-    GridSubdivision::convertToNonHier(root, convertedNodes, glm::mat4());
+    cout << "1" << endl;
+    GridSubdivision::convertToNonHier(root, glm::mat4(1.f), glm::mat4(1.f));
 
+    cout << "2" << endl;
     std::vector<uint> indices(convertedNodes.size());
     for (int i = 0; i < indices.size(); i++) {
         indices.at(i) = i;
     }
+    cout << "3" << endl;
 
-    findSceneBorder(convertedNodes, xmin, xmax, ymin, ymax, zmin, zmax);
+    findSceneBorder(xmin, xmax, ymin, ymax, zmin, zmax);
 
+    cout << "4" << endl;
     lattice.resize(pow(8, depth));
     subdivide(indices, depth, 0, 0, 0, depth);
     totalDepth = depth;
-    // std::cout << xmin << " "<< xmax << " "<< ymin << " "<< ymax << " "<< zmin << " "<< zmax << " " << endl;
+    cout << "5" << endl;
 
     for (int i = 0; i < pow(2, depth); i++) {
         for (int j = 0; j < pow(2, depth); j++) {
@@ -31,24 +35,17 @@ GridSubdivision::GridSubdivision( SceneNode * root, int depth ) {
         std::cout << std::endl;
     }
 
-    // for (int i = 0; i < boundaries.size(); i++) {
-    //     for (int j = 0; j < 6; j++) {
-    //         std::cout << boundaries.at(i).at(j) << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    for (ConvertedNode *node : convertedNodes) {
+        for (float bounds : node->boundaries) {
+            cout << bounds << " ";
+        }
+        cout << endl;
+    }
 
-    // for (int i = 0; i < convertedNodes.size(); i++) {
-        
-    //     std::cout << glm::to_string(convertedNodes.at(i)->get_transform()) << std::endl;
-    // }
-    // for (int i = 0; i < indices.size(); i++) {
-        
-    //     std::cout << indices.at(i) << std::endl;
-    // }
+    cout << xmin << " " << xmax << " " << ymin << " " << ymax << " " << zmin << " " << zmax << " " << endl;
 }
 
-void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, Material *material, bool &result) {
+void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, SceneNode *rNode, bool &result) {
     glm::vec3 position;
     if (origin[0] > xmax || origin[0] < xmin || origin[1] > ymax || origin[1] < ymin || origin[2] > zmax || origin[2] < zmin) {
         // cout << "eye out of grid" << slope[2] << endl;
@@ -56,47 +53,54 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
         glm::vec3 test;
         bool isFirst = true;
 
-        float xtleft = (xmin - origin[0])/slope[0];
-        test = origin + slope*xtleft;
-        if (test[1] >= ymin && test[1] <= ymax && test[2] >= zmin && test[2] <= zmax && xtleft > 0.001 && (isFirst || xtleft < minT)) {
-            minT = xtleft;
-            isFirst = false;
+        if (slope[0] != 0) {
+            float xtleft = (xmin - origin[0])/slope[0];
+            test = origin + slope*xtleft;
+            if (test[1] >= ymin && test[1] <= ymax && test[2] >= zmin && test[2] <= zmax && xtleft > 0.001 && (isFirst || xtleft < minT)) {
+                minT = xtleft;
+                isFirst = false;
+            }
+
+            float xtright = (xmax - origin[0])/slope[0];
+            test = origin + slope*xtright;
+            if (test[1] >= ymin && test[1] <= ymax && test[2] >= zmin && test[2] <= zmax && xtright > 0.001 && (isFirst || xtright < minT)) {
+                minT = xtright;
+                isFirst = false;
+            }
         }
 
-        float xtright = (xmax - origin[0])/slope[0];
-        test = origin + slope*xtright;
-        if (test[1] >= ymin && test[1] <= ymax && test[2] >= zmin && test[2] <= zmax && xtright > 0.001 && (isFirst || xtright < minT)) {
-            minT = xtright;
-            isFirst = false;
+        if (slope[1] != 0) {
+            float yttop = (ymax - origin[1]) / slope[1];
+            test = origin + slope*yttop;
+            if (test[0] >= xmin && test[0] <= xmax && test[2] >= zmin && test[2] <= zmax && yttop > 0.001 && (isFirst || yttop < minT)) {
+                minT = yttop;
+                isFirst = false;
+            }
+
+            float ytbot = (ymin - origin[1]) / slope[1];
+            test = origin + slope*ytbot;
+            if (test[0] >= xmin && test[0] <= xmax && test[2] >= zmin && test[2] <= zmax && ytbot > 0.001 && (isFirst || ytbot < minT)) {
+                minT = ytbot;
+                isFirst = false;
+            }
         }
 
-        float yttop = (ymax - origin[1]) / slope[1];
-        test = origin + slope*yttop;
-        if (test[0] >= xmin && test[0] <= xmax && test[2] >= zmin && test[2] <= zmax && yttop > 0.001 && (isFirst || yttop < minT)) {
-            minT = yttop;
-            isFirst = false;
-        }
 
-        float ytbot = (ymin - origin[1]) / slope[1];
-        test = origin + slope*ytbot;
-        if (test[0] >= xmin && test[0] <= xmax && test[2] >= zmin && test[2] <= zmax && ytbot > 0.001 && (isFirst || ytbot < minT)) {
-            minT = ytbot;
-            isFirst = false;
-        }
+        if (slope[2] != 0) {
+            float ztback = (zmin - origin[2]) / slope[2];
+            test = origin + slope*ztback;
+            if (test[0] >= xmin && test[0] <= xmax && test[1] >= zmin && test[1] <= zmax && ztback > 0.001 && (isFirst || ztback < minT)) {
+                minT = ztback;
+                isFirst = false;
+            }
 
-        float ztback = (zmin - origin[2]) / slope[2];
-        test = origin + slope*ztback;
-        if (test[0] >= xmin && test[0] <= xmax && test[1] >= zmin && test[1] <= zmax && ztback > 0.001 && (isFirst || ztback < minT)) {
-            minT = ztback;
-            isFirst = false;
-        }
-
-        float ztfront = (zmax - origin[2]) / slope[2];
-        test = origin + slope*ztfront;
-        if (test[0] >= xmin && test[0] <= xmax && test[1] >= zmin && test[1] <= zmax && ztfront > 0.001 && (isFirst || ztfront < minT)) {
-            minT = ztfront;
-            
-            isFirst = false;
+            float ztfront = (zmax - origin[2]) / slope[2];
+            test = origin + slope*ztfront;
+            if (test[0] >= xmin && test[0] <= xmax && test[1] >= zmin && test[1] <= zmax && ztfront > 0.001 && (isFirst || ztfront < minT)) {
+                minT = ztfront;
+                
+                isFirst = false;
+            }
         }
 
         if (isFirst) {
@@ -161,27 +165,11 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
         errZ = (zmin + (gridk + 1)*distZ) - position[2];
         tZ = -tZ;
     }
-
-            // static int count = 0;
-            // count += 1;
-            // cout << count << endl;
-    if (gridi != 0 || gridj != 0 || gridk != 0) {
-    //     static int count = 0;
-    //     count += 1;
-    //     cout << count << endl;
-        cout << gridi << " " << gridj << " " << gridk << endl;
-    }
+    
     while (gridi < numRows && gridj < numRows && gridk < numRows && gridi >= 0 && gridj >= 0 && gridk >= 0) {
+        // cout << glm::to_string(slope) << " " << gridi << " " << gridj << " " << gridk << endl;
 
-        // if (gridj <= 2) {
-
-            // cout << gridi << " " << gridj << " " << gridk << " " << glm::to_string(slope) << endl;
-        // }
-        // static int count = 0;
-        // count += 1;
-        // cout << count << endl;
-
-        checkIntersection(gridi, gridj, gridk, origin, slope, t, normal, material, result);
+        checkIntersection(gridi, gridj, gridk, origin, slope, t, normal, rNode, result);
         if (result) {
             return;
         }
@@ -189,14 +177,17 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
         float xt = (tX*(distX - errX))/distX;
         float yt = (tY*(distY - errY))/distY; // amount of time left for y to complete the step
         float zt = (tZ*(distZ - errZ))/distZ;
-            // cout << xt << " " << yt << " " << zt << " "<< endl;
 
-        if (xt < yt && xt < zt && slope[0] != 0 && xt != 0) {
+        // cout << glm::to_string(position) << " " << xt << " " << yt << " " << zt << endl;
+
+        if ((yt == 0 || xt < yt) && (zt == 0 || xt < zt) && slope[0] != 0 && xt != 0) {
             position = position + slope*xt;
-        } else if (yt < xt && yt < zt && slope[1] != 0 && yt != 0) {
+        } else if ((xt == 0 || yt < xt) && (zt == 0 || yt < zt) && slope[1] != 0 && yt != 0) {
             position = position + slope*yt;
         } else if (slope[2] != 0 && zt != 0) {
             position = position + slope*zt;
+        } else {
+            return;
         }
 
         if (slope[0] > 0) {
@@ -213,9 +204,6 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
         } else {
             gridj = ceil((position[1] - ymin)/distY) - 1;
             errY = (ymin + (gridj + 1)*distY) - position[1];
-            // if (errY < 0) {
-            //     cout << ymin << " " << gridj*distY << " " << position[1] << endl;
-            // }
         }
 
         if (slope[2] > 0) {
@@ -232,35 +220,28 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
 
 void GridSubdivision::checkIntersection(
     int i, int j, int k, glm::vec3 origin, glm::vec3 slope,
-    float &t, glm::vec3 &normal, Material *material, bool &result) {
+    float &t, glm::vec3 &normal, SceneNode *rNode, bool &result) {
 
     for (uint ind : lattice.at(i*pow(4, totalDepth) + j*pow(2, totalDepth) + k)) {
-        // if (ind > 2) {
-        //     std::cout << ind << std::endl;
-        // }
-        SceneNode *node = convertedNodes.at(ind);
+        ConvertedNode *conv = convertedNodes.at(ind);
+        SceneNode *node = conv->node;
         if (node->m_nodeType == NodeType::GeometryNode) {
             double temp;
             glm::vec3 tempn;
             GeometryNode *casted = static_cast<GeometryNode*>(node);
-            // std::cout << ind << std::endl;
-            glm::vec3 invO = glm::vec3(casted->get_inverse()*glm::vec4(origin, 1));
-            glm::vec3 invM = glm::vec3(casted->get_inverse()*glm::vec4(slope, 0));
 
-            // cout << glm::to_string(invM) + "\n" << endl;
-            if ( (i == 1 || i == 2) && (j == 4) && (k == 2 || k == 3)) {
-                cout << ind << " " << glm::to_string(slope) << endl;
-            }
+            glm::vec3 invO = glm::vec3(conv->invTrans*glm::vec4(origin, 1));
+            glm::vec3 invM = glm::vec3(conv->invTrans*glm::vec4(slope, 0));
 
             if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.001) {
                 if (!result || t > temp) {
                     t = temp;
-                    normal = normalize(glm::vec3(glm::transpose(casted->get_inverse()) * glm::vec4(tempn, 0)));
+                    normal = normalize(glm::vec3(glm::transpose(conv->invTrans) * glm::vec4(tempn, 0)));
                     // PhongMaterial *mat = static_cast<PhongMaterial*>(casted->m_material);
                     // kd = mat->m_kd;
                     // ks = mat->m_ks;
                     // shininess = mat->m_shininess;
-                    material = casted->m_material;
+                    *rNode = *conv->node;
 
                     result = true;
                 }
@@ -272,9 +253,6 @@ void GridSubdivision::checkIntersection(
 void GridSubdivision::subdivide(std::vector<uint> objIndices, int depth, int i, int j, int k, int totalDepth) {
     if (depth == 0) {
         lattice.at(i*pow(4, totalDepth) + j*pow(2, totalDepth) + k) = objIndices;
-        // for (int i = 0 ; i < objIndices.size(); i++) {
-        //     std::cout << objIndices.at(i) << std::endl;
-        // }
     } else if (!objIndices.empty()){
 
         std::vector<uint> i000;
@@ -293,7 +271,7 @@ void GridSubdivision::subdivide(std::vector<uint> objIndices, int depth, int i, 
         float zmid = zmin + (k + pow(2, depth - 1))*((float) (zmax - zmin)) / pow(2, totalDepth);
 
         for (uint index : objIndices) {
-            std::vector<float> bounds = boundaries.at(index);
+            std::vector<float> bounds = convertedNodes.at(index)->boundaries;
 
             //boundaries: smallx, bigx, smally, bigy, smallz, bigz
             if (xmid > bounds.at(0)) {
@@ -345,32 +323,27 @@ void GridSubdivision::subdivide(std::vector<uint> objIndices, int depth, int i, 
     }
 }
 
-void GridSubdivision::convertToNonHier(SceneNode *node, std::vector<SceneNode *> &converted, glm::mat4 ptrans) {
+void GridSubdivision::convertToNonHier(SceneNode *node, glm::mat4 ptrans, glm::mat4 pinv) {
 
     glm::mat4 curTrans = ptrans * node->get_transform();
+    glm::mat4 curInv = node->get_inverse() * pinv;
 
     if (node->m_nodeType == NodeType::GeometryNode) {
-
-		// GeometryNode *casted = static_cast<GeometryNode*>(node);
-
-        node->set_transform(curTrans);
-
-        std::cout << glm::to_string(curTrans) << std::endl;
-
-        converted.push_back(node);
+        convertedNodes.push_back(new ConvertedNode(node, std::vector<float>(6), curTrans, curInv));
     }
 
     for (SceneNode *child : node->children) {
-		GridSubdivision::convertToNonHier(child, converted, curTrans);
+		GridSubdivision::convertToNonHier(child, curTrans, curInv);
 	}
 }
 
-void GridSubdivision::findSceneBorder(std::vector<SceneNode *> nodes, float &xmin, float &xmax, float &ymin, float &ymax, float &zmin, float &zmax) {
+void GridSubdivision::findSceneBorder(float &xmin, float &xmax, float &ymin, float &ymax, float &zmin, float &zmax) {
     bool firstRunz = true;
     bool firstRuny = true;
     bool firstRunx = true;
 
-    for (SceneNode *node : nodes) {
+    for (ConvertedNode *conv : convertedNodes) {
+        SceneNode *node = conv->node;
         if (node->m_nodeType == NodeType::GeometryNode) {
 		    GeometryNode *casted = static_cast<GeometryNode*>(node);
 
@@ -379,10 +352,10 @@ void GridSubdivision::findSceneBorder(std::vector<SceneNode *> nodes, float &xmi
             glm::vec4 spos = glm::vec4(bound->m_pos,1);
 
             //find minmaxz
-            glm::vec4 normalxy = casted->get_inverse()*glm::vec4(0,0,1,0);
+            glm::vec4 normalxy = conv->invTrans*glm::vec4(0,0,1,0);
             double tz = bound->m_radius / glm::length(normalxy);
-            float zbig = (casted->get_transform()*(spos + normalxy * tz))[2];
-            float zsmall = (casted->get_transform()*(spos - normalxy * tz))[2];
+            float zbig = (conv->trans*(spos + normalxy * tz))[2];
+            float zsmall = (conv->trans*(spos - normalxy * tz))[2];
             float temp;
 
             if (zbig < zsmall) {
@@ -405,10 +378,10 @@ void GridSubdivision::findSceneBorder(std::vector<SceneNode *> nodes, float &xmi
             }
 
             //find minmaxy
-            glm::vec4 normalxz = casted->get_inverse()*glm::vec4(0,1,0,0);
+            glm::vec4 normalxz = conv->invTrans*glm::vec4(0,1,0,0);
             double ty = bound->m_radius / glm::length(normalxz);
-            float ybig = (casted->get_transform()*(spos + normalxz * ty))[1];
-            float ysmall = (casted->get_transform()*(spos - normalxz * ty))[1];
+            float ybig = (conv->trans*(spos + normalxz * ty))[1];
+            float ysmall = (conv->trans*(spos - normalxz * ty))[1];
 
             if (ybig < ysmall) {
                 temp = ybig;
@@ -430,10 +403,10 @@ void GridSubdivision::findSceneBorder(std::vector<SceneNode *> nodes, float &xmi
             }
 
             //find minmax x
-            glm::vec4 normalyz = casted->get_inverse()*glm::vec4(1,0,0,0);
+            glm::vec4 normalyz = conv->invTrans*glm::vec4(1,0,0,0);
             double tx = bound->m_radius / glm::length(normalyz);
-            float xbig = (casted->get_transform()*(spos + normalyz * tx))[0];
-            float xsmall = (casted->get_transform()*(spos - normalyz * tx))[0];
+            float xbig = (conv->trans*(spos + normalyz * tx))[0];
+            float xsmall = (conv->trans*(spos - normalyz * tx))[0];
 
             if (xbig < xsmall) {
                 temp = xbig;
@@ -454,14 +427,12 @@ void GridSubdivision::findSceneBorder(std::vector<SceneNode *> nodes, float &xmi
                 }
             }
 
-            std::vector<float> bounds(6);
-            bounds.at(0) = (xsmall);
-            bounds.at(1) = (xbig);
-            bounds.at(2) = (ysmall);
-            bounds.at(3) = (ybig);
-            bounds.at(4) = (zsmall);
-            bounds.at(5) = (zbig);
-            boundaries.push_back(bounds);
+            conv->boundaries.at(0) = (xsmall);
+            conv->boundaries.at(1) = (xbig);
+            conv->boundaries.at(2) = (ysmall);
+            conv->boundaries.at(3) = (ybig);
+            conv->boundaries.at(4) = (zsmall);
+            conv->boundaries.at(5) = (zbig);
         }
     }
 }

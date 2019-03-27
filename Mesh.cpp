@@ -17,8 +17,9 @@ Mesh::Mesh( const std::string& fname )
 	size_t s1, s2, s3;
 
 	bool hasSet = false;
+    std::string filename = "Assets/" + fname;
 
-	std::ifstream ifs( fname.c_str() );
+	std::ifstream ifs( filename.c_str() );
 	while( ifs >> code ) {
 
 		if( code == "v" ) {
@@ -53,7 +54,7 @@ Mesh::Mesh( const std::string& fname )
 		}
 	}
 
-    
+    boundingSphere = new NonhierSphere((maxV + minV)/2, glm::length((maxV - minV)/2));
 }
 
 

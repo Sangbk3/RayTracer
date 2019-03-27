@@ -6,4 +6,5 @@ class VarHolder {
   	static bool useThread;
 	static int numReflections;
     static bool showBoundingBox;
+	static bool useSubdivision;
 };

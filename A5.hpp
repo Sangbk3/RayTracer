@@ -48,12 +48,13 @@ void getClosestObjectPoint(
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, bool &result, Material *mat,
+	float &t, glm::vec3 &normal, bool &result, SceneNode *rNode,
 	 GridSubdivision *gridSubdivision);
 
 glm::vec3 getColorAtPoint(
 	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 normal, glm::vec3 kd, glm::vec3 ks, double shininess, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
+	GridSubdivision *gridSubdivision,
 	int numReflected);
 float distance(glm::vec3 p1, glm::vec3 p2);
 glm::vec3 divide(glm::vec3 v, float weight);

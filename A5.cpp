@@ -43,8 +43,11 @@ void A5_Render(
 
     auto start = std::chrono::system_clock::now();
 
-	GridSubdivision *gridSubdivision = new GridSubdivision(root, 0);
+	GridSubdivision *gridSubdivision;
 
+	if (VarHolder::useSubdivision) {
+		gridSubdivision = new GridSubdivision(root, 0);
+	}
 	system("setterm -cursor off");
 
 	if (VarHolder::useThread) {
@@ -113,9 +116,26 @@ void setPixelOfImage(
 		glm::vec3 ks;
 		double shininess;
 		bool result = false;
-		// getClosestObjectPoint(root, eye, m, t, normal, kd, ks, shininess, result, glm::mat4(1.f));
-		Material *mat;
-		getClosestObjectPointUseGrid(root, eye, m, t, normal, result, mat, gridSubdivision);
+
+		if (VarHolder::useSubdivision) {
+			SceneNode *rNode;
+			getClosestObjectPointUseGrid(root, eye, m, t, normal, result, rNode, gridSubdivision);
+
+			GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+			PhongMaterial *mat = static_cast<PhongMaterial*>(casted->m_material);
+			if (mat == nullptr) {
+				cout << "null" << endl;
+			}
+			cout << "before seg" << endl;
+
+			kd = mat->m_kd;
+
+			cout << "after seg" << endl;
+			ks = mat->m_ks;
+			shininess = mat->m_shininess;
+		} else {
+			getClosestObjectPoint(root, eye, m, t, normal, kd, ks, shininess, result, glm::mat4(1.f));
+		}
 
 		if (!result) {
 			pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
@@ -123,23 +143,23 @@ void setPixelOfImage(
 			pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
 
 		} else {
-			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, kd, ks, shininess, lights, ambient, root, 0);
+			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, kd, ks, shininess, lights, ambient, root, gridSubdivision, 0);
 			pixelColors[y*h + x][0] = colorHere[0];
 			pixelColors[y*h + x][1] = colorHere[1];
 			pixelColors[y*h + x][2] = colorHere[2];
 		}
 
 		progress++;
-		// printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
+		printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
 	}
 }
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, bool &result, Material *mat,
+	float &t, glm::vec3 &normal, bool &result, SceneNode *rNode,
 	GridSubdivision *gridSubdivision) {
 
-	gridSubdivision->do3DDDA(origin, slope, t, normal, mat, result);
+	gridSubdivision->do3DDDA(origin, slope, t, normal, rNode, result);
 
 	// if (node->m_nodeType == NodeType::GeometryNode) {
 	// 	double temp;
@@ -202,6 +222,7 @@ glm::vec3 getColorAtPoint(
 	glm::vec3 normal, glm::vec3 kd, glm::vec3 ks,
 	double shininess, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
+	GridSubdivision *gridSubdivision,
 	int numReflected) {
 
 	glm::vec3 point = origin + slope * t;
@@ -231,8 +252,20 @@ glm::vec3 getColorAtPoint(
 		// glm::vec3 r = normalize(m - 2*glm::dot(m, n)*n);
 		// glm::vec3 r = slope - 2*glm::dot(slope, n)*n;
 
-		getClosestObjectPoint(root, point, lin, tt, normall, kdd, kss, shininesss, result, glm::mat4(1.f));
+		if (VarHolder::useSubdivision) {
+			SceneNode *rNode;
 
+			getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, rNode, gridSubdivision);
+
+			cout << "after seg" << endl;
+			GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+			PhongMaterial *mat = static_cast<PhongMaterial*>(casted->m_material);
+			kdd = mat->m_kd;
+			kss = mat->m_ks;
+			shininesss = mat->m_shininess;
+		} else {
+			getClosestObjectPoint(root, point, lin, tt, normall, kdd, kss, shininesss, result, glm::mat4(1.f));
+		}
 		if (!result) {
 			resultv[0] += glm::max(0.f, glm::min(1.f, (float) (kd[0]*glm::dot(n, lin) + ks[0]*pow(glm::dot(r, m), shininess))*l->colour[0]/coeff));
 			resultv[1] += glm::max(0.f, glm::min(1.f, (float) (kd[1]*glm::dot(n, lin) + ks[1]*pow(glm::dot(r, m), shininess))*l->colour[1]/coeff));
@@ -255,10 +288,20 @@ glm::vec3 getColorAtPoint(
 		double rshin;
 		bool rres = false;
 
-		getClosestObjectPoint(root, point, r, rt, rnorm, rd, rs, rshin, rres, glm::mat4(1.f));
-
+		if (VarHolder::useSubdivision) {
+			SceneNode *rNode;
+			getClosestObjectPointUseGrid(root, point, r, rt, rnorm, rres, rNode, gridSubdivision);
+			GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+			PhongMaterial *mat = static_cast<PhongMaterial*>(casted->m_material);
+			rd = mat->m_kd;
+			rs = mat->m_ks;
+			rshin = mat->m_shininess;
+		} else {
+			getClosestObjectPoint(root, point, r, rt, rnorm, rd, rs, rshin, rres, glm::mat4(1.f));
+		}
+		
 		if (rres) {
-			glm::vec3 refL = 0.3*getColorAtPoint(point, r, rt, rnorm, rd, rs, rshin, lights, ambient, root, numReflected + 1);
+			glm::vec3 refL = 0.3*getColorAtPoint(point, r, rt, rnorm, rd, rs, rshin, lights, ambient, root, gridSubdivision, numReflected + 1);
 			resultv[0] += glm::max(0.f, glm::min(1.f, (float) ks[0]*refL[0]));
 			resultv[1] += glm::max(0.f, glm::min(1.f, (float) ks[1]*refL[1]));
 			resultv[2] += glm::max(0.f, glm::min(1.f, (float) ks[2]*refL[2]));

@@ -25,6 +25,9 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-B") {
         VarHolder::showBoundingBox = true;
       }
+      if (std::string(argv[i]) == "-S") {
+        VarHolder::useSubdivision = false;
+      }
     }
   }
 
