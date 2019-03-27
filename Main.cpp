@@ -26,7 +26,11 @@ int main(int argc, char** argv)
         VarHolder::showBoundingBox = true;
       }
       if (std::string(argv[i]) == "-S") {
-        VarHolder::useSubdivision = false;
+        if (i + 1 < argc) {
+          VarHolder::useSubdivision = true;
+          VarHolder::subdivideDepth = std::stoi(std::string(argv[i+1]));
+          i++;
+        }
       }
     }
   }

@@ -54,7 +54,7 @@ Mesh::Mesh( const std::string& fname )
 		}
 	}
 
-    boundingSphere = new NonhierSphere((maxV + minV)/2, glm::length((maxV - minV)/2));
+    boundingSphere = new NonhierSphere((maxV + minV)/2, glm::length2(maxV - minV)/2);
 }
 
 

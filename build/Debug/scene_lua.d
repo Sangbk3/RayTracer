@@ -79,7 +79,7 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
  ../../shared/include/glm/detail/func_integer.inl ../Mesh.hpp \
  ../Primitive.hpp ../polyroots.hpp ../VarHolder.hpp ../GeometryNode.hpp \
  ../SceneNode.hpp ../Material.hpp ../JointNode.hpp ../PhongMaterial.hpp \
- ../A5.hpp ../Image.hpp ../GridSubdivision.hpp
+ ../A5.hpp ../Image.hpp ../GridSubdivision.hpp ../ThreadPool.hpp
 
 ../scene_lua.hpp:
 
@@ -270,3 +270,5 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
 ../Image.hpp:
 
 ../GridSubdivision.hpp:
+
+../ThreadPool.hpp:

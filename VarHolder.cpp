@@ -3,4 +3,5 @@
 bool VarHolder::useThread = true;
 int VarHolder::numReflections = 0;
 bool VarHolder::showBoundingBox = false;
-bool VarHolder::useSubdivision = true;
+bool VarHolder::useSubdivision = false;
+int VarHolder::subdivideDepth = 0;

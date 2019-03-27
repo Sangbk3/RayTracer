@@ -79,6 +79,7 @@ OBJECTS := \
 	$(OBJDIR)/Main.o \
 	$(OBJDIR)/A5.o \
 	$(OBJDIR)/GridSubdivision.o \
+	$(OBJDIR)/ThreadPool.o \
 
 RESOURCES := \
 
@@ -182,6 +183,9 @@ $(OBJDIR)/A5.o: ../A5.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 $(OBJDIR)/GridSubdivision.o: ../GridSubdivision.cpp
+	@echo $(notdir $<)
+	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
+$(OBJDIR)/ThreadPool.o: ../ThreadPool.cpp
 	@echo $(notdir $<)
 	$(SILENT) $(CXX) $(CXXFLAGS) -o "$@" -c "$<"
 

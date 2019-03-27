@@ -16,6 +16,7 @@
 #include "Image.hpp"
 #include "VarHolder.hpp"
 #include "GridSubdivision.hpp"
+#include "ThreadPool.hpp"
 
 
 void A5_Render(
@@ -48,7 +49,7 @@ void getClosestObjectPoint(
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, bool &result, SceneNode *rNode,
+	float &t, glm::vec3 &normal, bool &result, SceneNode **rNode,
 	 GridSubdivision *gridSubdivision);
 
 glm::vec3 getColorAtPoint(

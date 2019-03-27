@@ -7,4 +7,5 @@ class VarHolder {
 	static int numReflections;
     static bool showBoundingBox;
 	static bool useSubdivision;
+	static int subdivideDepth;
 };
