@@ -6,3 +6,4 @@ int VarHolder::numRefractions = 0;
 bool VarHolder::showBoundingBox = false;
 bool VarHolder::useSubdivision = false;
 int VarHolder::subdivideDepth = 0;
+bool VarHolder::showNormal = false;

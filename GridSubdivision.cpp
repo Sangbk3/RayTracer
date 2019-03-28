@@ -218,7 +218,7 @@ void GridSubdivision::checkIntersection(
             glm::vec3 invO = glm::vec3(conv->invTrans*glm::vec4(origin, 1));
             glm::vec3 invM = glm::vec3(conv->invTrans*glm::vec4(slope, 0));
 
-            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.01) {
+            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.001) {
 
                 if (!result || t > temp) {
                     t = temp;

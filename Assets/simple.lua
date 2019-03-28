@@ -36,9 +36,24 @@ s5 = gr.nh_sphere('s5', {0, 100, -250}, 25)
 scene_root:add_child(s5)
 s5:set_material(mat3)
 
-s6 = gr.nh_sphere('s6', {0, 0, 750}, 25)
+
+s7 = gr.nh_sphere('s7', {-10, 0, 500}, 25)
+scene_root:add_child(s7)
+s7:set_material(matsang2)
+
+
+s8 = gr.nh_sphere('s8', {10, -100, -250}, 25)
+scene_root:add_child(s8)
+s8:set_material(mat3)
+
+
+s9 = gr.nh_sphere('s9', {-50, 300, -250}, 25)
+scene_root:add_child(s9)
+s9:set_material(mat3)
+
+s6 = gr.nh_sphere('s6', {0, 0, 800}, 5)
 scene_root:add_child(s6)
-s6:scale(4, 4, 1)
+s6:scale(1, 1, 1)
 s6:set_material(matsang2)
 
 white_light = gr.light({-100.0, 150.0, 400.0}, {0.9, 0.9, 0.9}, {1, 0.0, 0.0})

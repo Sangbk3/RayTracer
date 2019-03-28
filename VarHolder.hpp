@@ -9,4 +9,5 @@ class VarHolder {
     static bool showBoundingBox;
 	static bool useSubdivision;
 	static int subdivideDepth;
+	static bool showNormal;
 };

@@ -38,6 +38,10 @@ int main(int argc, char** argv)
           i++;
         }
       }
+
+      if (std::string(argv[i]) == "-N") {
+        VarHolder::showNormal = true;
+      }
     }
   }
 

@@ -132,11 +132,14 @@ void setPixelOfImage(
 			// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
 
 			pixelColors[y*h + x][0] = 0.2;
-			pixelColors[y*h + x][1] = 0.8;
-			pixelColors[y*h + x][2] = 0.8;
+			pixelColors[y*h + x][1] = 0.7;
+			pixelColors[y*h + x][2] = 0.7;
 
 		} else {
 			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, mat, lights, ambient, root, gridSubdivision, 0, 0);
+			if (VarHolder::showNormal) {
+				colorHere = normal;
+			}
 			pixelColors[y*h + x][0] = colorHere[0];
 			pixelColors[y*h + x][1] = colorHere[1];
 			pixelColors[y*h + x][2] = colorHere[2];
@@ -172,7 +175,7 @@ void getClosestObjectPoint(
 		if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn) && temp > 0.01) {
 			if (!result || t > temp) {
 				t = temp;
-				normal = normalize(glm::vec3(glm::transpose(newT) * glm::vec4(tempn, 0)));
+				normal = glm::normalize(glm::vec3(glm::transpose(newT) * glm::vec4(tempn, 0)));
 				*mat = static_cast<PhongMaterial*>(casted->m_material);
 
 				result = true;
@@ -257,9 +260,8 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 	int numTransmitted,
 	glm::vec3 &resultv) {
 
-	glm::vec3 m = -1*slope;
 	float refractRatio = 1;
-	float cosi = glm::dot(m, n);
+	float cosi = glm::dot(-1*slope, n);
 	float cost;
 	bool insidePoly = cosi < 0;
 
@@ -272,29 +274,31 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 
 	if (!insidePoly) {
 		tL = (1.0 / ((mat)->refractIndex))*((tD + n*cosi)) - n * sqrt(1 - pow((1.0 / ((mat)->refractIndex)), 2)*(1 - pow(cosi, 2)));
+		tL = glm::normalize(tL);
 		cost = glm::dot(-1*tL, n);
 		refractRatio = 1 - fresnelR(1, (mat)->refractIndex, cosi, cost);
 
 	} else {
 		tL = (((mat)->refractIndex) / 1.0)*((tD + n*cosi)) - n * sqrt(1 - pow((((mat)->refractIndex) / 1.0), 2)*(1 - pow(cosi, 2)));
+		tL = glm::normalize(tL);
 		cost = glm::dot(-1*tL, n);
 		refractRatio = 1 - fresnelR((mat)->refractIndex, 1, cosi, cost);
 	}
 
-	if (1 - refractRatio > 0) {
-		sangReflect(point, slope, n, (1 - refractRatio)*((mat)->m_kt), lights, ambient, root, gridSubdivision, numReflected, numTransmitted, resultv);
+	if ((1 - refractRatio) > 0 && numReflected < VarHolder::numReflections) {
+		sangReflect(point, slope, n, (1 - refractRatio)*((mat)->m_kt), lights, ambient, root, gridSubdivision, numReflected, numTransmitted + 1, resultv);
 	}
 
 	if (refractRatio > 0) {
 		if (VarHolder::useSubdivision) {
 			SceneNode *rNode;
-			getClosestObjectPointUseGrid(root, point, tL, transt, tnorm, tres, &rNode, gridSubdivision);
+			getClosestObjectPointUseGrid(root, point - tL*0.002, tL, transt, tnorm, tres, &rNode, gridSubdivision);
 			if (tres) {
 				GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 				tMat = static_cast<PhongMaterial*>(casted->m_material);
 			}
 		} else {
-			getClosestObjectPoint(root, point, tL, transt, tnorm, &tMat, tres, glm::mat4(1.f));
+			getClosestObjectPoint(root, point - tL*0.002, tL, transt, tnorm, &tMat, tres, glm::mat4(1.f));
 		}
 		
 		if (tres) {
@@ -317,7 +321,7 @@ void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 
 	int numTransmitted,
 	glm::vec3 &resultv) {
 
-	glm::vec3 r = slope - 2*glm::dot(slope, normal)*normal;
+	glm::vec3 r = glm::normalize(slope - 2*glm::dot(slope, normal)*normal);
 	glm::vec3 rnorm = glm::vec3();
 	float rt = -1.f;
 	PhongMaterial *rMat;
@@ -340,15 +344,14 @@ void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 
 		resultv[1] += glm::max(0.f, glm::min(1.f, (float) (ks[1])*refL[1]));
 		resultv[2] += glm::max(0.f, glm::min(1.f, (float) (ks[2])*refL[2]));
 	} else {
-		resultv[0] += glm::max(0.f, glm::min(1.f, (float) (ks[0])*0.2f));
-		resultv[1] += glm::max(0.f, glm::min(1.f, (float) (ks[1])*0.2f));
-		resultv[2] += glm::max(0.f, glm::min(1.f, (float) (ks[2])*0.2f));
+		// resultv[0] += glm::max(0.f, glm::min(1.f, (float) (ks[0])*0.2f));
+		// resultv[1] += glm::max(0.f, glm::min(1.f, (float) (ks[1])*0.8f));
+		// resultv[2] += glm::max(0.f, glm::min(1.f, (float) (ks[2])*0.8f));
 	}
 }
 
 float fresnelR(float iori, float iort, float cosi, float cost) {
-	float sint = sqrtf(1 - pow(cost, 2));
-	if (sint >= 1) {
+	if (cost <= 0) {
 		return 1;
 	}
 	float rs = pow(((iort*cosi) - (iori*cost)) / ((iort*cosi) + (iori*cost)), 2); 
