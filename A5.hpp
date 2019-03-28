@@ -44,8 +44,7 @@ void setPixelOfImage(
 glm::mat4 getPixelToWorldTransform(Image image, double fovy, glm::vec3 view, glm::vec3 up, glm::vec3 eye);
 void getClosestObjectPoint(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, glm::vec3& kd, glm::vec3& ks,
-	 double &shininess, bool &result, glm::mat4 parentInv);
+	float &t, glm::vec3 &normal, PhongMaterial **mat, bool &result, glm::mat4 parentInv);
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
@@ -53,9 +52,26 @@ void getClosestObjectPointUseGrid(
 	 GridSubdivision *gridSubdivision);
 
 glm::vec3 getColorAtPoint(
-	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 normal, glm::vec3 kd, glm::vec3 ks, double shininess, std::list<Light *> lights, glm::vec3 ambient,
+	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 normal, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
 	GridSubdivision *gridSubdivision,
-	int numReflected);
+	int numReflected,
+	int numTransmitted);
 float distance(glm::vec3 p1, glm::vec3 p2);
 glm::vec3 divide(glm::vec3 v, float weight);
+
+void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 ks, std::list<Light *> lights, glm::vec3 ambient,
+	SceneNode * root,
+	GridSubdivision *gridSubdivision,
+	int numReflected,
+	int numTransmitted,
+	glm::vec3 &resultv);
+
+void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
+	SceneNode * root,
+	GridSubdivision *gridSubdivision,
+	int numReflected,
+	int numTransmitted,
+	glm::vec3 &resultv);
+
+float fresnelR(float iori, float iort, float cosi, float cost);

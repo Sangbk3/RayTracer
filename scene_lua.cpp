@@ -378,6 +378,34 @@ int gr_material_cmd(lua_State* L)
   return 1;
 }
 
+extern "C"
+int gr_sangmaterial_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_material_ud* data = (gr_material_ud*)lua_newuserdata(L, sizeof(gr_material_ud));
+  data->material = 0;
+  
+  double kd[3], ks[3], kt[3];
+  get_tuple(L, 1, kd, 3);
+  get_tuple(L, 2, ks, 3);
+  get_tuple(L, 3, kt, 3);
+
+  double shininess = luaL_checknumber(L, 4);
+  double ior = luaL_checknumber(L, 5);
+  
+  data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]),
+                                     glm::vec3(ks[0], ks[1], ks[2]),
+                                     glm::vec3(kt[0], kt[1], kt[2]),
+                                     shininess,
+                                     ior);
+
+  luaL_newmetatable(L, "gr.material");
+  lua_setmetatable(L, -2);
+  
+  return 1;
+}
+
 // Add a Child to a node
 extern "C"
 int gr_node_add_child_cmd(lua_State* L)
@@ -521,6 +549,7 @@ static const luaL_Reg grlib_functions[] = {
   {"sphere", gr_sphere_cmd},
   {"joint", gr_joint_cmd},
   {"material", gr_material_cmd},
+  {"sangmaterial", gr_sangmaterial_cmd},
   // New for assignment 4
   {"cube", gr_cube_cmd},
   {"nh_sphere", gr_nh_sphere_cmd},

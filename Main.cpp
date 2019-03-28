@@ -22,6 +22,12 @@ int main(int argc, char** argv)
           i++;
         }
       }
+      if (std::string(argv[i]) == "-T") {
+        if (i + 1 < argc) {
+          VarHolder::numRefractions = std::stoi(std::string(argv[i+1]));
+          i++;
+        }
+      }
       if (std::string(argv[i]) == "-B") {
         VarHolder::showBoundingBox = true;
       }

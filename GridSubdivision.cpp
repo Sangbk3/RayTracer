@@ -18,15 +18,16 @@ GridSubdivision::GridSubdivision( SceneNode * root, int depth, glm::vec3 eye, gl
 
     findSceneBorder(xmin, xmax, ymin, ymax, zmin, zmax);
     if (view[2] >= 0) {
-        zmin = eye[2];
+        zmin = max(eye[2], zmin);
     } else {
-        zmax = eye[2];
+        zmax = min(eye[2], zmax);
     }
 	float height = (zmax - zmin)*tanf(PI * fov/360);
-    ymax = eye[1] + height;
-    ymin = eye[1] - height;
-    xmax = eye[0] + height*aspect;
-    xmin = eye[0] - height*aspect;
+
+    ymax = min(ymax, eye[1] + height);
+    ymin = max(ymin, eye[1] - height);
+    xmax = min(xmax, eye[0] + height*aspect);
+    xmin = max(xmin, eye[0] - height*aspect);
 
     lattice.resize(pow(8, depth));
     subdivide(indices, depth, 0, 0, 0, depth);
@@ -217,7 +218,7 @@ void GridSubdivision::checkIntersection(
             glm::vec3 invO = glm::vec3(conv->invTrans*glm::vec4(origin, 1));
             glm::vec3 invM = glm::vec3(conv->invTrans*glm::vec4(slope, 0));
 
-            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.001) {
+            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.01) {
 
                 if (!result || t > temp) {
                     t = temp;
