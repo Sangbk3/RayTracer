@@ -42,6 +42,9 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-N") {
         VarHolder::showNormal = true;
       }
+      if (std::string(argv[i]) == "-G") {
+        VarHolder::showGloss = true;
+      }
     }
   }
 

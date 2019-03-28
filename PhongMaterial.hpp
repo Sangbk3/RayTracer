@@ -9,7 +9,7 @@
 class PhongMaterial : public Material {
 public:
   PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, double shininess);
-  PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, const glm::vec3& kt, double shininess, double ior);
+  PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, const glm::vec3& kt, double shininess, double ior, double perturb);
   virtual ~PhongMaterial();
   glm::vec3 m_kd;
   glm::vec3 m_ks;
@@ -17,6 +17,7 @@ public:
 
   float refractIndex;
   double m_shininess;
+  int perturb;
 
   // 1 perfect vac
   // water 1.33

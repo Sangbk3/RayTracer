@@ -7,7 +7,8 @@
 #include <vector>
 #include <iostream>
 #include <chrono>
-#include <ctime>    
+#include <ctime>  
+#include <random>  
 
 #include "SceneNode.hpp"
 #include "GeometryNode.hpp"
@@ -52,7 +53,7 @@ void getClosestObjectPointUseGrid(
 	 GridSubdivision *gridSubdivision);
 
 glm::vec3 getColorAtPoint(
-	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 normal, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
+	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 norm, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
 	GridSubdivision *gridSubdivision,
 	int numReflected,
@@ -60,7 +61,9 @@ glm::vec3 getColorAtPoint(
 float distance(glm::vec3 p1, glm::vec3 p2);
 glm::vec3 divide(glm::vec3 v, float weight);
 
-void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 ks, std::list<Light *> lights, glm::vec3 ambient,
+glm::vec3 perturbNormal(glm::vec3 &ray, double perturb);
+
+void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 ks, double perturb, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
 	GridSubdivision *gridSubdivision,
 	int numReflected,

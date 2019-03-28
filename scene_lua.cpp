@@ -296,6 +296,35 @@ int gr_light_cmd(lua_State* L)
   get_tuple(L, 3, l.falloff, 3);
 
   l.colour = glm::vec3(col[0], col[1], col[2]);
+  l.radius = 0;
+  
+  data->light = new Light(l);
+
+  luaL_newmetatable(L, "gr.light");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Make an Area light
+extern "C"
+int gr_arealight_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
+  data->light = 0;
+
+  Light l;
+
+  double col[3];
+  get_tuple(L, 1, &l.position[0], 3);
+  get_tuple(L, 2, col, 3);
+  get_tuple(L, 3, l.falloff, 3);
+  double radius = luaL_checknumber(L, 4);
+
+  l.colour = glm::vec3(col[0], col[1], col[2]);
+  l.radius = radius;
   
   data->light = new Light(l);
 
@@ -393,12 +422,14 @@ int gr_sangmaterial_cmd(lua_State* L)
 
   double shininess = luaL_checknumber(L, 4);
   double ior = luaL_checknumber(L, 5);
+  double perturb = luaL_checknumber(L, 6);
   
   data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]),
                                      glm::vec3(ks[0], ks[1], ks[2]),
                                      glm::vec3(kt[0], kt[1], kt[2]),
                                      shininess,
-                                     ior);
+                                     ior,
+                                     perturb);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);
@@ -556,6 +587,7 @@ static const luaL_Reg grlib_functions[] = {
   {"nh_box", gr_nh_box_cmd},
   {"mesh", gr_mesh_cmd},
   {"light", gr_light_cmd},
+  {"arealight", gr_arealight_cmd},
   {"render", gr_render_cmd},
   {0, 0}
 };
