@@ -80,4 +80,4 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 
 float fresnelR(float iori, float iort, float cosi, float cost);
 
-glm::vec3 getRandomLightPosition(Light *light);
+glm::vec3 getLightPosition(Light *light, int count, int total, glm::vec3 &point);

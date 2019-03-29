@@ -212,13 +212,28 @@ glm::vec3 getColorAtPoint(
 	if (glm::length2((mat)->m_kd) != 0) {
 		for (Light * l : lights) {
 			if (VarHolder::softenShadow && l->radius > 0) {
-				int numIter = 36;
+				int numIter = 12;
 				glm::vec3 resC = glm::vec3(0);
+
+				glm::vec3 lv = l->position - point;
+				glm::vec3 pp;
+				if (lv[1] != 0) {
+					pp = glm::vec3(0, (lv[2]/lv[1]), 1);
+				} else if (lv[2] != 0) {
+					pp = glm::vec3(1, 0, (lv[0]/lv[2]));
+				} else if (lv[0] != 0) {
+					pp = glm::vec3((lv[1]/lv[0]), 1, 0);
+				}
+				pp = normalize(pp)*l->radius;
+
 				for (int i = 0; i < numIter; i++) {
 					glm::vec3 normall = glm::vec3();
 					float tt = -1.f;
 					PhongMaterial *dMat;
-					glm::vec3 randPos = getRandomLightPosition(l);
+					
+					float angle = 2*PI*(((float) i) / numIter);
+					glm::vec3 randPos = l->position + glm::rotate(glm::vec3(pp), angle, lv);
+
 					glm::vec3 lin = normalize(randPos - point);
 
 					bool result = false;
@@ -532,12 +547,12 @@ glm::vec3 divide(glm::vec3 v, float weight) {
 	return glm::vec3(v[0] / weight, v[1] / weight, v[2] / weight);
 }
 
-glm::vec3 getRandomLightPosition(Light *light) {
-	double r = VarHolder::dist(VarHolder::generator) * light->radius;
-	float a = VarHolder::dist(VarHolder::generator) * 2 * PI;
-	float b = VarHolder::dist(VarHolder::generator) * 2 * PI;
-	glm::vec3 deltaV = glm::vec3(r, 0, 0);
-	deltaV = glm::rotateZ(deltaV, a);
-	deltaV = glm::rotateY(deltaV, b);
-	return deltaV + light->position;
+glm::vec3 getLightPosition(Light *light, int count, int total, glm::vec3 &point) {
+
+	// float a = VarHolder::dist(VarHolder::generator) * 2 * PI;
+	// float b = VarHolder::dist(VarHolder::generator) * 2 * PI;
+	// glm::vec3 deltaV = glm::vec3(r, 0, 0);
+	// deltaV = glm::rotateZ(deltaV, a);
+	// deltaV = glm::rotateY(deltaV, b);
+	// return deltaV + light->position;
 }
