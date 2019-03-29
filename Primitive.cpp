@@ -44,7 +44,7 @@ bool Sphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 
 }
 
 Cube::Cube() {
-    boundingSphere = new NonhierSphere(glm::vec3(0.5f, 0.5f, 0.5f), 1);
+    boundingSphere = new NonhierSphere(glm::vec3(0.5f, 0.5f, 0.5f), sqrt(.5));
 }
 
 Cube::~Cube()

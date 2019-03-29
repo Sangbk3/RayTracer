@@ -38,6 +38,7 @@ void A5_Render(
 		const glm::vec3 & ambient,
 		const std::list<Light *> & lights
 );
+
 void setPixelOfImage(
 	glm::mat4 pixelToWorldTransform, int x, int h, glm::vec3 *pixelColors, glm::vec3 eye,
 	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient, GridSubdivision *gridSubdivision);
@@ -78,3 +79,5 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 	glm::vec3 &resultv);
 
 float fresnelR(float iori, float iort, float cosi, float cost);
+
+glm::vec3 getRandomLightPosition(Light *light);

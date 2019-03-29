@@ -56,9 +56,9 @@ scene_root:add_child(s6)
 s6:scale(1, 1, 1)
 s6:set_material(matsang)
 
-white_light = gr.light({-100.0, 150.0, 400.0}, {0.9, 0.9, 0.9}, {1, 0.0, 0.0})
-magenta_light = gr.light({400.0, 100.0, 150.0}, {0.7, 0.0, 0.7}, {1, 0.0, 0.0})
+white_light = gr.arealight({-100.0, 150.0, 400.0}, {0.9, 0.9, 0.9}, {1, 0.0, 0.0}, 30)
+magenta_light = gr.arealight({400.0, 100.0, 150.0}, {0.7, 0.0, 0.7}, {1, 0.0, 0.0}, 30)
 
-gr.render(scene_root, 'simple.png', 1024, 1024,
+gr.render(scene_root, 'simple.png', 512, 512,
 	  {0, 0, 800}, {0, 0, -800}, {0, 1, 0}, 50,
 	  {0.3, 0.3, 0.3}, {white_light, magenta_light})

@@ -50,21 +50,16 @@ void A5_Render(
     auto start = std::chrono::system_clock::now();
 	system("setterm -cursor off");
 
+
 	if (VarHolder::useThread) {
 		cout << "Initializing threads... " << endl;
-	}
+		ThreadPool threadPool(256);
 
-	for (uint x = 0; x < w; ++x) {
-		//With Threads
-		if (VarHolder::useThread) {
+		for (uint x = 0; x < w; ++x) {
 			std::thread t(setPixelOfImage, pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
 			myThreads.push_back(std::move(t));
-		} else {
-			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
 		}
-	}
 
-	if (VarHolder::useThread) {
 		for (int i = 0; i < myThreads.size(); i++)
 		{
 			std::thread & th = myThreads.at(i);
@@ -74,6 +69,10 @@ void A5_Render(
 
 				i--;
 			}
+		}
+	} else {
+		for (uint x = 0; x < w; ++x) {
+			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
 		}
 	}
 
@@ -212,30 +211,63 @@ glm::vec3 getColorAtPoint(
 	// shadow rays (diffuse component)
 	if (glm::length2((mat)->m_kd) != 0) {
 		for (Light * l : lights) {
+			if (VarHolder::softenShadow && l->radius > 0) {
+				int numIter = 36;
+				glm::vec3 resC = glm::vec3(0);
+				for (int i = 0; i < numIter; i++) {
+					glm::vec3 normall = glm::vec3();
+					float tt = -1.f;
+					PhongMaterial *dMat;
+					glm::vec3 randPos = getRandomLightPosition(l);
+					glm::vec3 lin = normalize(randPos - point);
 
-			glm::vec3 normall = glm::vec3();
-			float tt = -1.f;
-			PhongMaterial *dMat;
-			glm::vec3 lin = normalize(l->position - point);
+					bool result = false;
 
-			bool result = false;
+					if (VarHolder::useSubdivision) {
+						SceneNode *rNode;
 
-			if (VarHolder::useSubdivision) {
-				SceneNode *rNode;
+						getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, &rNode, gridSubdivision);
+					} else {
+						getClosestObjectPoint(root, point, lin, tt, normall, &dMat, result, glm::mat4(1.f));
+					}
+					if (!result) {
+						float ld = distance(l->position, origin);
+						float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
+						glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
 
-				getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, &rNode, gridSubdivision);
+						resC[0] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
+						resC[1] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
+						resC[2] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+					}
+				}
+
+				resC = (1.0/numIter)*resC;
+				resultv += resC;
+
 			} else {
-				getClosestObjectPoint(root, point, lin, tt, normall, &dMat, result, glm::mat4(1.f));
-			}
-			if (!result) {
-				float ld = distance(l->position, origin);
-				float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
-				// coeff = coeff * lights.size();
-				glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
+				glm::vec3 normall = glm::vec3();
+				float tt = -1.f;
+				PhongMaterial *dMat;
+				glm::vec3 lin = normalize(l->position - point);
 
-				resultv[0] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
-				resultv[1] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
-				resultv[2] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+				bool result = false;
+
+				if (VarHolder::useSubdivision) {
+					SceneNode *rNode;
+
+					getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, &rNode, gridSubdivision);
+				} else {
+					getClosestObjectPoint(root, point, lin, tt, normall, &dMat, result, glm::mat4(1.f));
+				}
+				if (!result) {
+					float ld = distance(l->position, origin);
+					float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
+					glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
+
+					resultv[0] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
+					resultv[1] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
+					resultv[2] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+				}
 			}
 		}
 	}
@@ -260,11 +292,11 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 	int numTransmitted,
 	glm::vec3 &resultv) {
 
+
 	float refractRatio = 1;
 	float cosi = glm::dot(-1*slope, n);
 	float cost;
 	bool insidePoly = cosi < 0;
-
 	glm::vec3 tD = slope;
 	glm::vec3 tL;
 	glm::vec3 tnorm = glm::vec3();
@@ -316,8 +348,8 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 					resC[2] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[2]*refractRatio*transL[2]));
 				} else {
 					resC[0] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[0]*refractRatio*0.2f));
-					resC[1] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[1]*refractRatio*0.8f));
-					resC[2] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[2]*refractRatio*0.8f));
+					resC[1] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[1]*refractRatio*0.2f));
+					resC[2] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[2]*refractRatio*0.2f));
 				}
 			}
 		}
@@ -498,4 +530,14 @@ float distance(glm::vec3 p1, glm::vec3 p2) {
 
 glm::vec3 divide(glm::vec3 v, float weight) {
 	return glm::vec3(v[0] / weight, v[1] / weight, v[2] / weight);
+}
+
+glm::vec3 getRandomLightPosition(Light *light) {
+	double r = VarHolder::dist(VarHolder::generator) * light->radius;
+	float a = VarHolder::dist(VarHolder::generator) * 2 * PI;
+	float b = VarHolder::dist(VarHolder::generator) * 2 * PI;
+	glm::vec3 deltaV = glm::vec3(r, 0, 0);
+	deltaV = glm::rotateZ(deltaV, a);
+	deltaV = glm::rotateY(deltaV, b);
+	return deltaV + light->position;
 }

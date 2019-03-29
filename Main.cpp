@@ -45,6 +45,9 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-G") {
         VarHolder::showGloss = true;
       }
+      if (std::string(argv[i]) == "-Z") {
+        VarHolder::softenShadow = true;
+      }
     }
   }
 

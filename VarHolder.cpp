@@ -8,5 +8,6 @@ bool VarHolder::useSubdivision = false;
 int VarHolder::subdivideDepth = 0;
 bool VarHolder::showNormal = false;
 bool VarHolder::showGloss = false;
+bool VarHolder::softenShadow = false;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);
 std::mt19937 VarHolder::generator;
