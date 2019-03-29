@@ -212,7 +212,7 @@ glm::vec3 getColorAtPoint(
 	if (glm::length2((mat)->m_kd) != 0) {
 		for (Light * l : lights) {
 			if (VarHolder::softenShadow && l->radius > 0) {
-				int numIter = 12;
+				int numIter = 15;
 				glm::vec3 resC = glm::vec3(0);
 
 				glm::vec3 lv = l->position - point;
@@ -224,15 +224,19 @@ glm::vec3 getColorAtPoint(
 				} else if (lv[0] != 0) {
 					pp = glm::vec3((lv[1]/lv[0]), 1, 0);
 				}
-				pp = normalize(pp)*l->radius;
+				pp = normalize(pp);
 
 				for (int i = 0; i < numIter; i++) {
 					glm::vec3 normall = glm::vec3();
 					float tt = -1.f;
 					PhongMaterial *dMat;
 					
-					float angle = 2*PI*(((float) i) / numIter);
-					glm::vec3 randPos = l->position + glm::rotate(glm::vec3(pp), angle, lv);
+					int lay = std::log2(numIter);
+					int curlay = std::log2(i + 1);
+					int numL = pow(2, curlay);
+					float angle = 2*PI*(((float) (i%(numL)))/numL);
+					float r = l->radius*((float) curlay)/lay;
+					glm::vec3 randPos = l->position + glm::rotate(pp*r, angle, lv);
 
 					glm::vec3 lin = normalize(randPos - point);
 
