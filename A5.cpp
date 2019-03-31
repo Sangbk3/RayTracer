@@ -39,6 +39,8 @@ void A5_Render(
 	numPixels = pwidth * pheight;
 	progress = 0;
 
+	std::cout << VarHolder::depthoffield << std::endl;
+
 	glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
 
 	size_t h = image.height() * VarHolder::supersample;
@@ -113,48 +115,104 @@ void A5_Render(
 void setPixelOfImage(
 	glm::mat4 pixelToWorldTransform, int x, int h, vec3 *pixelColors, glm::vec3 eye,
 	SceneNode *root, std::list<Light *> lights, glm::vec3 ambient, GridSubdivision *gridSubdivision) {
+
+	float epsilon = 1;
+	int numEyes = 4;
 		
 	for (int y = 0; y < h; y++) {
 		glm::vec4 pixel = glm::vec4(x, y, 0, 1);
 		pixel = pixelToWorldTransform * pixel;
 
 		vec4 slope = pixel - glm::vec4(eye, 1);
-		glm::vec3 m = glm::normalize(glm::vec3(slope));
-		glm::vec3 normal = glm::vec3();
-		float t = -1.f;
-		PhongMaterial *mat;
-		float u, v;
-		bool result = false;
 
-		if (VarHolder::useSubdivision) {
-			SceneNode *rNode;
-			getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+		if (VarHolder::useDepthoffield) {
+			float doft = VarHolder::depthoffield / abs(slope[2]);
+			vec3 dofpoi = eye + glm::vec3(slope * doft);
 
-			if (result) {
-				GeometryNode *casted = static_cast<GeometryNode*>(rNode);
-				mat = static_cast<PhongMaterial*>(casted->m_material);
+			glm::vec3 colorHere = vec3(0);
+
+			for (int ei = 0; ei < numEyes; ei++) {
+				vec3 neweye = eye + rotateZ(vec3(0,epsilon,0), ei*2*PI/numEyes);
+
+				glm::vec3 m = glm::normalize(dofpoi - neweye);
+				glm::vec3 normal = glm::vec3();
+				float t = -1.f;
+				PhongMaterial *mat;
+				float u, v;
+				bool result = false;
+
+				if (VarHolder::useSubdivision) {
+					SceneNode *rNode;
+					getClosestObjectPointUseGrid(root, neweye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+
+					if (result) {
+						GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+						mat = static_cast<PhongMaterial*>(casted->m_material);
+					}
+				} else {
+					getClosestObjectPoint(root, neweye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
+				}
+
+				if (!result) {
+					// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
+					// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
+					// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
+
+					pixelColors[y*h + x][0] = 0.2;
+					pixelColors[y*h + x][1] = 0.7;
+					pixelColors[y*h + x][2] = 0.7;
+
+				} else {
+					colorHere += getColorAtPoint(neweye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
+					if (VarHolder::showNormal) {
+						colorHere = normal;
+					}
+				}
 			}
-		} else {
-			getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
-		}
 
-		if (!result) {
-			// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
-			// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
-			// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
+			colorHere = colorHere / numEyes;
 
-			pixelColors[y*h + x][0] = 0.2;
-			pixelColors[y*h + x][1] = 0.7;
-			pixelColors[y*h + x][2] = 0.7;
-
-		} else {
-			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
-			if (VarHolder::showNormal) {
-				colorHere = normal;
-			}
 			pixelColors[y*h + x][0] = colorHere[0];
 			pixelColors[y*h + x][1] = colorHere[1];
 			pixelColors[y*h + x][2] = colorHere[2];
+		} else {
+			glm::vec3 m = glm::normalize(glm::vec3(slope));
+			glm::vec3 normal = glm::vec3();
+			float t = -1.f;
+			PhongMaterial *mat;
+			float u, v;
+			bool result = false;
+
+			if (VarHolder::useSubdivision) {
+				SceneNode *rNode;
+				getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+
+				if (result) {
+					GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+					mat = static_cast<PhongMaterial*>(casted->m_material);
+				}
+			} else {
+				getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
+			}
+
+			if (!result) {
+				// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
+				// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
+				// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
+
+				pixelColors[y*h + x][0] = 0.2;
+				pixelColors[y*h + x][1] = 0.7;
+				pixelColors[y*h + x][2] = 0.7;
+
+			} else {
+				glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
+				if (VarHolder::showNormal) {
+					colorHere = normal;
+				}
+				pixelColors[y*h + x][0] = colorHere[0];
+				pixelColors[y*h + x][1] = colorHere[1];
+				pixelColors[y*h + x][2] = colorHere[2];
+			}
 		}
 
 		progress++;
@@ -284,9 +342,9 @@ glm::vec3 getColorAtPoint(
 						float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
 						glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
 
-						resC[0] += glm::max(0.f, glm::min(1.f, (float) (kd[0]*glm::dot(n, lin))));// + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
-						resC[1] += glm::max(0.f, glm::min(1.f, (float) (kd[1]*glm::dot(n, lin))));// + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
-						resC[2] += glm::max(0.f, glm::min(1.f, (float) (kd[2]*glm::dot(n, lin))));// + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+						resC[0] += glm::max(0.f, glm::min(1.f, (float) (kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
+						resC[1] += glm::max(0.f, glm::min(1.f, (float) (kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
+						resC[2] += glm::max(0.f, glm::min(1.f, (float) (kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
 					}
 				}
 

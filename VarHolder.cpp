@@ -12,6 +12,8 @@ bool VarHolder::softenShadow = false;
 bool VarHolder::useTexture = false;
 int VarHolder::supersample = 1;
 bool VarHolder::useBumpmap = false;
+bool VarHolder::useDepthoffield = false;
+float VarHolder::depthoffield = 0;
 
 int VarHolder::time = 0;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);

@@ -60,6 +60,13 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-b") {
         VarHolder::useBumpmap = true;
       }
+      if (std::string(argv[i]) == "-d") {
+        if (i + 1 < argc) {
+          VarHolder::useDepthoffield = true;
+          VarHolder::depthoffield = std::stod(std::string(argv[i+1]));
+          i++;
+        }
+      }
 
       if (std::string(argv[i]) == "-a") {
         if (i + 1 < argc) {

@@ -18,6 +18,9 @@ class VarHolder {
 	static int time;
 	static int supersample;
 	static bool useBumpmap;
+	static bool useDepthoffield;
+	static float depthoffield;
+
 	static std::uniform_real_distribution<> dist;
 	static std::mt19937 generator;
 };
