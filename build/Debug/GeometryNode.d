@@ -88,7 +88,7 @@ Debug/GeometryNode.o: ../GeometryNode.cpp ../GeometryNode.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
  ../../shared/include/glm/gtx/../gtx/transform.inl \
- ../../shared/include/glm/gtx/rotate_vector.inl
+ ../../shared/include/glm/gtx/rotate_vector.inl ../VarHolder.hpp
 
 ../GeometryNode.hpp:
 
@@ -283,3 +283,5 @@ Debug/GeometryNode.o: ../GeometryNode.cpp ../GeometryNode.hpp \
 ../../shared/include/glm/gtx/../gtx/transform.inl:
 
 ../../shared/include/glm/gtx/rotate_vector.inl:
+
+../VarHolder.hpp:

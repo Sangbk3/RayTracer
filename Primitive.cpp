@@ -89,7 +89,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         // std::cout << t << " \n";
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
-        if (material->hasTexture) {
+        if (material->hasTexture && VarHolder::useBumpmap) {
             getUVNormal(poi, u, v, normal);
         } else {
             getUV(poi, u, v);
@@ -225,9 +225,6 @@ void NonhierSphere::getUV(glm::vec3 &at, float &u, float &v) {
     float phi = acos(std::min(1.0, std::max(-1.0, -(diff[1])/m_radius)));
     u = (theta + PI) / (2*PI);
     v = phi/PI;
-    // if (phi == 0) {
-    // std::cout << "\n"<< at[1] << " " << m_pos[1] << " "<< m_radius << " " << -(at[1] - m_pos[1])/m_radius <<std::endl;
-    // }
 }
 
 void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &normal) {

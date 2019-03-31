@@ -216,8 +216,8 @@ Debug/A5.o: ../A5.cpp ../../shared/include/glm/ext.hpp \
  ../../shared/include/glm/./gtx/../detail/intrinsic_matrix.inl \
  ../../shared/include/glm/./gtx/simd_mat4.inl ../A5.hpp ../SceneNode.hpp \
  ../Material.hpp ../GeometryNode.hpp ../Primitive.hpp ../polyroots.hpp \
- ../PhongMaterial.hpp ../Texture.hpp ../Image.hpp ../Light.hpp \
- ../VarHolder.hpp ../GridSubdivision.hpp ../ThreadPool.hpp
+ ../PhongMaterial.hpp ../Texture.hpp ../Image.hpp ../VarHolder.hpp \
+ ../Light.hpp ../GridSubdivision.hpp ../ThreadPool.hpp
 
 ../../shared/include/glm/ext.hpp:
 
@@ -671,9 +671,9 @@ Debug/A5.o: ../A5.cpp ../../shared/include/glm/ext.hpp \
 
 ../Image.hpp:
 
-../Light.hpp:
-
 ../VarHolder.hpp:
+
+../Light.hpp:
 
 ../GridSubdivision.hpp:
 

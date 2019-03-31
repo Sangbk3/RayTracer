@@ -88,7 +88,7 @@ Debug/Primitive.o: ../Primitive.cpp ../Primitive.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
  ../../shared/include/glm/gtx/../gtx/transform.inl \
- ../../shared/include/glm/gtx/rotate_vector.inl
+ ../../shared/include/glm/gtx/rotate_vector.inl ../VarHolder.hpp
 
 ../Primitive.hpp:
 
@@ -279,3 +279,5 @@ Debug/Primitive.o: ../Primitive.cpp ../Primitive.hpp \
 ../../shared/include/glm/gtx/../gtx/transform.inl:
 
 ../../shared/include/glm/gtx/rotate_vector.inl:
+
+../VarHolder.hpp:

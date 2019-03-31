@@ -16,6 +16,8 @@ class VarHolder {
 	static bool softenShadow;
 	static bool useTexture;
 	static int time;
+	static int supersample;
+	static bool useBumpmap;
 	static std::uniform_real_distribution<> dist;
 	static std::mt19937 generator;
 };

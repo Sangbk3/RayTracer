@@ -34,15 +34,15 @@ void A5_Render(
 	}
 
 	// Fill in raytracing code here...  
-	int pwidth = image.width();
-	int pheight = image.height();
+	int pwidth = image.width()*VarHolder::supersample;
+	int pheight = image.height()*VarHolder::supersample;
 	numPixels = pwidth * pheight;
 	progress = 0;
 
 	glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
 
-	size_t h = image.height();
-	size_t w = image.width();
+	size_t h = image.height() * VarHolder::supersample;
+	size_t w = image.width() * VarHolder::supersample;
 	vec3 *pixelColors = new vec3[w*h];
 
 	GridSubdivision *gridSubdivision;
@@ -80,14 +80,22 @@ void A5_Render(
 		}
 	}
 
-	for (uint y = 0; y < h; ++y) {
-		for (uint x = 0; x < w; ++x) {
+	for (uint y = 0; y < image.height(); ++y) {
+		for (uint x = 0; x < image.width(); ++x) {
+			glm::vec3 pColor = glm::vec3(0);
+			for (int dy = 0; dy < VarHolder::supersample; dy++) {
+				for (int dx = 0; dx < VarHolder::supersample; dx++) {
+					pColor += pixelColors[(y*VarHolder::supersample + dy)*w + (x*VarHolder::supersample + dx)];
+				}
+			}
+
+			pColor = pColor / pow(VarHolder::supersample, 2);
 			// Red: 
-			image(x, y, 0) = (double)pixelColors[y*h + x][0];
+			image(x, y, 0) = (double)pColor[0];
 			// Green: 
-			image(x, y, 1) = (double)pixelColors[y*h + x][1];
+			image(x, y, 1) = (double)pColor[1];
 			// Blue: 
-			image(x, y, 2) = (double)pixelColors[y*h + x][2];
+			image(x, y, 2) = (double)pColor[2];
 		}
 	}
 
@@ -537,8 +545,8 @@ float fresnelR(float iori, float iort, float cosi, float cost) {
 }
 
 glm::mat4 getPixelToWorldTransform(Image image, double fovy, glm::vec3 view, glm::vec3 up, glm::vec3 eye) {
-	int pwidth = image.width();
-	int pheight = image.height();
+	int pwidth = image.width()*VarHolder::supersample;
+	int pheight = image.height()*VarHolder::supersample;
 
 	glm::mat4 pixelToWorldTransform = glm::mat4(1.f);
 	float idist = 10;

@@ -10,6 +10,8 @@ bool VarHolder::showNormal = false;
 bool VarHolder::showGloss = false;
 bool VarHolder::softenShadow = false;
 bool VarHolder::useTexture = false;
+int VarHolder::supersample = 1;
+bool VarHolder::useBumpmap = false;
 
 int VarHolder::time = 0;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);

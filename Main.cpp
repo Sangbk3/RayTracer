@@ -51,6 +51,15 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-t") {
         VarHolder::useTexture = true;
       }
+      if (std::string(argv[i]) == "-ss") {
+        if (i + 1 < argc) {
+          VarHolder::supersample = std::stoi(std::string(argv[i+1]));
+          i++;
+        }
+      }
+      if (std::string(argv[i]) == "-b") {
+        VarHolder::useBumpmap = true;
+      }
 
       if (std::string(argv[i]) == "-a") {
         if (i + 1 < argc) {

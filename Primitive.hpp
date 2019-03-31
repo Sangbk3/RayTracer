@@ -6,6 +6,7 @@
 #include <glm/gtx/norm.hpp>
 #include "polyroots.hpp"
 #include "PhongMaterial.hpp"
+#include "VarHolder.hpp"
 
 class NonhierSphere;
 
