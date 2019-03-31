@@ -89,7 +89,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         // std::cout << t << " \n";
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
-        if (material->hasTexture && VarHolder::useBumpmap) {
+        if (material->hasBump && VarHolder::useBumpmap) {
             getUVNormal(poi, u, v, normal);
         } else {
             getUV(poi, u, v);
@@ -106,7 +106,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         // std::cout << t << " \n";
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
-        if (material->hasTexture) {
+        if (material->hasBump && VarHolder::useBumpmap) {
             getUVNormal(poi, u, v, normal);
         } else {
             getUV(poi, u, v);
@@ -241,7 +241,7 @@ void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &no
     u = (theta + PI) / (2*PI);
     v = phi/PI;
     
-    float scale = (2048.f/material->texture->texture->width());
+    float scale = (2048.f/material->bump->texture->width());
     u = u*scale;
     v = v*scale;
 
@@ -251,8 +251,8 @@ void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &no
     float uep = u + epsilon*scale;
     float vep = v + epsilon*scale;
 
-    float du = glm::length2(material->texture->getColorAtUV(u, v)) - glm::length2(material->texture->getColorAtUV(uep, v));
-    float dv = glm::length2(material->texture->getColorAtUV(u, v)) - glm::length2(material->texture->getColorAtUV(u, vep));
+    float du = glm::length2(material->bump->getColorAtUV(u, v)) - glm::length2(material->bump->getColorAtUV(uep, v));
+    float dv = glm::length2(material->bump->getColorAtUV(u, v)) - glm::length2(material->bump->getColorAtUV(u, vep));
 
     glm::vec3 result = normal + (du * glm::cross(normal, pv) - dv * glm::cross(normal, pu))/glm::length2(normal);
     normal = result;

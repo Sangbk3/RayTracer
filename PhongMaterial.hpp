@@ -14,6 +14,7 @@ public:
   virtual ~PhongMaterial();
 
   void setTexture(Texture *t);
+  void setBump(Texture *t);
 
   glm::vec3 m_kd;
   glm::vec3 m_ks;
@@ -23,8 +24,10 @@ public:
   double m_shininess;
   int perturb;
   bool hasTexture = false;
+  bool hasBump = false;
 
   Texture *texture;
+  Texture *bump;
 
   // 1 perfect vac
   // water 1.33

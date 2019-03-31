@@ -29,5 +29,10 @@ void PhongMaterial::setTexture(Texture *t) {
 	hasTexture = true;
 }
 
+void PhongMaterial::setBump(Texture *t) {
+	bump = t;
+	hasBump = true;
+}
+
 PhongMaterial::~PhongMaterial()
 {}

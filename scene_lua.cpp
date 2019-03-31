@@ -527,6 +527,29 @@ int gr_material_set_texture_cmd(lua_State* L)
   return 0;
 }
 
+// Set a node's Texture
+extern "C"
+int gr_material_set_bump_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_material_ud* selfdata = (gr_material_ud*)luaL_checkudata(L, 1, "gr.material");
+  luaL_argcheck(L, selfdata != 0, 1, "Material expected");
+
+  PhongMaterial* self = dynamic_cast<PhongMaterial*>(selfdata->material);
+
+  luaL_argcheck(L, self != 0, 1, "PhongMaterial node expected");
+  
+  gr_texture_ud* textureData = (gr_texture_ud*)luaL_checkudata(L, 2, "gr.texture");
+  luaL_argcheck(L, textureData != 0, 2, "Texture expected");
+
+  Texture* texture = textureData->texture;
+
+  self->setBump(texture);
+
+  return 0;
+}
+
 // Add a Scaling transformation to a node.
 extern "C"
 int gr_node_scale_cmd(lua_State* L)
@@ -665,6 +688,7 @@ static const luaL_Reg grlib_node_methods[] = {
 
 static const luaL_Reg grlib_material_methods[] = {
   {"set_texture", gr_material_set_texture_cmd},
+  {"set_bump", gr_material_set_bump_cmd},
   {0, 0}
 };
 
