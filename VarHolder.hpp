@@ -20,6 +20,8 @@ class VarHolder {
 	static bool useBumpmap;
 	static bool useDepthoffield;
 	static float depthoffield;
+	static bool usePointMass;
+	static int pmCoeff;
 
 	static std::uniform_real_distribution<> dist;
 	static std::mt19937 generator;

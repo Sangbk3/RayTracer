@@ -33,7 +33,6 @@ void A5_Render(
 		l->position[0] += VarHolder::time;
 	}
 
-	// Fill in raytracing code here...  
 	int pwidth = image.width()*VarHolder::supersample;
 	int pheight = image.height()*VarHolder::supersample;
 	numPixels = pwidth * pheight;
@@ -183,41 +182,105 @@ void setPixelOfImage(
 			float u, v;
 			bool result = false;
 
-			if (VarHolder::useSubdivision) {
-				SceneNode *rNode;
-				getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+			if (VarHolder::usePointMass) {
+				glm::vec3 lcol = vec3(0.0);
+				for (Light *l : lights) {
+					if (l->hasPointMass) {
+						PointMass *pmass = l->pointMass;
 
-				if (result) {
-					GeometryNode *casted = static_cast<GeometryNode*>(rNode);
-					mat = static_cast<PhongMaterial*>(casted->m_material);
+						vec3 y0 = eye;
+						vec3 m0 = m;
+						float dt = 10;
+						float counter = 1000;
+
+						glm::vec3 tempnorm = glm::vec3();
+						float tempt = -1.f;
+						float tempu, tempv;
+						PhongMaterial *tempmat;
+						bool tempr = false;
+
+						while (counter > 0) {
+							tempt = -1.f;
+							tempr = false;
+							getClosestObjectPoint(root, y0, m0, tempt, tempnorm, tempu, tempv, &tempmat, tempr, mat4(1.f));
+							if (tempr && tempt > 0 && tempt <= dt) {
+								if (tempmat->hasTexture) {
+									lcol = tempmat->texture->getColorAtUV(tempu, tempv);
+								} else {
+									lcol = tempmat->m_kd;
+								}
+								break;
+							}
+							
+							rungekutta(y0, m0, dt, pmass);
+							counter-=dt;
+						}
+					}
 				}
+
+				pixelColors[y*h + x][0] = lcol[0];
+				pixelColors[y*h + x][1] = lcol[1];
+				pixelColors[y*h + x][2] = lcol[2];
 			} else {
-				getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
-			}
+				if (VarHolder::useSubdivision) {
+					SceneNode *rNode;
+					getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
 
-			if (!result) {
-				// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
-				// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
-				// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
-
-				pixelColors[y*h + x][0] = 0.2;
-				pixelColors[y*h + x][1] = 0.7;
-				pixelColors[y*h + x][2] = 0.7;
-
-			} else {
-				glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
-				if (VarHolder::showNormal) {
-					colorHere = normal;
+					if (result) {
+						GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+						mat = static_cast<PhongMaterial*>(casted->m_material);
+					}
+				} else {
+					getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
 				}
-				pixelColors[y*h + x][0] = colorHere[0];
-				pixelColors[y*h + x][1] = colorHere[1];
-				pixelColors[y*h + x][2] = colorHere[2];
+
+				if (!result) {
+					// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
+					// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
+					// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
+
+					pixelColors[y*h + x][0] = 0.2;
+					pixelColors[y*h + x][1] = 0.7;
+					pixelColors[y*h + x][2] = 0.7;
+
+				} else {
+					glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
+					if (VarHolder::showNormal) {
+						colorHere = normal;
+					}
+					pixelColors[y*h + x][0] = colorHere[0];
+					pixelColors[y*h + x][1] = colorHere[1];
+					pixelColors[y*h + x][2] = colorHere[2];
+				}
 			}
 		}
 
 		progress++;
 		printf("\rRendering in progress: %.2f%%", progress*100.0 / numPixels);
 	}
+}
+
+void rungekutta(glm::vec3 &yn, glm::vec3 &mn, float dt, PointMass *pmass) {
+	vec3 ppos = pmass->position;
+	glm::vec3 c0 = mn;
+	glm::vec3 k0 = getForceField(0, yn, c0, ppos);
+	glm::vec3 c1 = mn + k0*dt/2;
+	glm::vec3 k1 = getForceField(dt/2, yn + c0*dt/2, c1, ppos);
+	glm::vec3 c2 = mn + k1*dt/2;
+	glm::vec3 k2 = getForceField(dt/2, yn + c1*dt/2, c2, ppos);
+	glm::vec3 c3 = mn + k2*dt;
+	glm::vec3 k3 = getForceField(dt, yn + dt*c2, c3, ppos);
+
+	yn = yn + (dt/6)*(c0 + 2*c1 + 2*c2 + c3);
+	mn = mn + (dt/6)*(k0 + 2*k1 + 2*k2 + k3);
+}
+
+glm::vec3 getForceField(float t, glm::vec3 y, glm::vec3 m, glm::vec3 mass) {
+	float h = pow(VarHolder::pmCoeff, 4);
+	glm::vec3 ymass = mass - y;
+	// glm::vec3 accel = PotentialCoefficient * h2 * point / (float)Math.Pow(point.LengthSquared(), 2.5);
+
+	return -t*(3.0/2)*pow(h, 2)*(1/pow(glm::length2(ymass),5))*glm::normalize(ymass);
 }
 
 void getClosestObjectPointUseGrid(

@@ -48,7 +48,7 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-Z") {
         VarHolder::softenShadow = true;
       }
-      if (std::string(argv[i]) == "-t") {
+      if (std::string(argv[i]) == "-tt") {
         VarHolder::useTexture = true;
       }
       if (std::string(argv[i]) == "-ss") {
@@ -64,6 +64,13 @@ int main(int argc, char** argv)
         if (i + 1 < argc) {
           VarHolder::useDepthoffield = true;
           VarHolder::depthoffield = std::stod(std::string(argv[i+1]));
+          i++;
+        }
+      }
+      if (std::string(argv[i]) == "-pm") {
+        if (i + 1 < argc) {
+          VarHolder::usePointMass = true;
+          VarHolder::pmCoeff = std::stoi(std::string(argv[i+1]));
           i++;
         }
       }

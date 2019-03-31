@@ -338,6 +338,52 @@ int gr_arealight_cmd(lua_State* L)
   return 1;
 }
 
+// Make an Area light with Pointmass
+extern "C"
+int gr_masslight_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
+  data->light = 0;
+
+  Light l;
+
+  double col[3];
+  get_tuple(L, 1, &l.position[0], 3);
+  get_tuple(L, 2, col, 3);
+  get_tuple(L, 3, l.falloff, 3);
+  double radius = luaL_checknumber(L, 4);
+
+  gr_material_ud* matdata = (gr_material_ud*)luaL_checkudata(L, 5, "gr.material");
+
+  l.colour = glm::vec3(col[0], col[1], col[2]);
+  l.radius = radius;
+
+  l.colour = glm::vec3(col[0], col[1], col[2]);
+  
+  data->light = new Light(l);
+
+  data->light->sphere = new NonhierSphere(data->light->position, radius);
+  data->light->sphere->setMaterial(matdata->material);
+
+  data->light->hasPointMass = true;
+
+  double massPos[3];
+  get_tuple(L, 6, massPos, 3);
+  double einsteinR = luaL_checknumber(L, 7);
+
+  PointMass *mass = new PointMass();
+  mass->position = glm::vec3(massPos[0], massPos[1], massPos[2]);
+  mass->einsteinR = einsteinR;
+  data->light->pointMass = mass;
+
+  luaL_newmetatable(L, "gr.light");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Render a scene
 extern "C"
 int gr_render_cmd(lua_State* L)
@@ -658,6 +704,7 @@ static const luaL_Reg grlib_functions[] = {
   {"mesh", gr_mesh_cmd},
   {"light", gr_light_cmd},
   {"arealight", gr_arealight_cmd},
+  {"masslight", gr_masslight_cmd},
   {"render", gr_render_cmd},
   {0, 0}
 };

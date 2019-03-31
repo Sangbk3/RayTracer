@@ -5,8 +5,10 @@
 #include <iosfwd>
 
 #include <glm/glm.hpp>
+#include "Primitive.hpp"
 
-// Represents a simple point light.
+struct PointMass;
+
 struct Light {
   Light();
   
@@ -15,6 +17,19 @@ struct Light {
   double falloff[3];
 
   double radius;
+
+
+  bool hasPointMass = false;
+  PointMass *pointMass;
+  NonhierSphere *sphere;
 };
 
 std::ostream& operator<<(std::ostream& out, const Light& l);
+
+
+struct PointMass {
+  PointMass();
+
+  double einsteinR;
+  glm::vec3 position;
+};

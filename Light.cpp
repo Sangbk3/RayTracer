@@ -16,6 +16,11 @@ Light::Light()
   radius = 0;
 }
 
+PointMass::PointMass() {
+  einsteinR = 0;
+  glm::vec3 position = glm::vec3(0,0,0);
+}
+
 std::ostream& operator<<(std::ostream& out, const Light& l)
 {
   out << "L[" << glm::to_string(l.colour) 

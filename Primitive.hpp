@@ -19,6 +19,7 @@ class Primitive {
     NonhierSphere *getBoundingSphere();
     NonhierSphere *boundingSphere;
     PhongMaterial *material;
+    bool hasMaterial = false;
 };
 
 class Sphere : public Primitive {

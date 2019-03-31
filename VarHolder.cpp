@@ -14,6 +14,8 @@ int VarHolder::supersample = 1;
 bool VarHolder::useBumpmap = false;
 bool VarHolder::useDepthoffield = false;
 float VarHolder::depthoffield = 0;
+bool VarHolder::usePointMass = false;
+int VarHolder::pmCoeff = 1;
 
 int VarHolder::time = 0;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);

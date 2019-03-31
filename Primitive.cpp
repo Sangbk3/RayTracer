@@ -12,6 +12,7 @@ Primitive::~Primitive()
 void Primitive::setMaterial(Material *pmat) {
     PhongMaterial *mat = static_cast<PhongMaterial *>(pmat);
     material = mat;
+    hasMaterial = true;
 }
 
 bool Primitive::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
@@ -89,7 +90,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         // std::cout << t << " \n";
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
-        if (material->hasBump && VarHolder::useBumpmap) {
+        if (hasMaterial && VarHolder::useBumpmap && material->hasBump) {
             getUVNormal(poi, u, v, normal);
         } else {
             getUV(poi, u, v);
@@ -106,7 +107,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         // std::cout << t << " \n";
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
-        if (material->hasBump && VarHolder::useBumpmap) {
+        if (hasMaterial && VarHolder::useBumpmap && material->hasBump) {
             getUVNormal(poi, u, v, normal);
         } else {
             getUV(poi, u, v);

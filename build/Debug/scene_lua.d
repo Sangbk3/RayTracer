@@ -76,8 +76,8 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
  ../../shared/include/glm/vector_relational.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
- ../../shared/include/glm/detail/func_integer.inl ../Mesh.hpp \
- ../Primitive.hpp ../../shared/include/glm/gtx/norm.hpp \
+ ../../shared/include/glm/detail/func_integer.inl ../Primitive.hpp \
+ ../../shared/include/glm/gtx/norm.hpp \
  ../../shared/include/glm/gtx/../gtx/quaternion.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/constants.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/constants.inl \
@@ -92,8 +92,8 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
  ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
  ../../shared/include/glm/gtx/../gtx/transform.inl \
  ../../shared/include/glm/gtx/rotate_vector.inl ../VarHolder.hpp \
- ../GeometryNode.hpp ../SceneNode.hpp ../JointNode.hpp ../A5.hpp \
- ../GridSubdivision.hpp ../ThreadPool.hpp
+ ../Mesh.hpp ../GeometryNode.hpp ../SceneNode.hpp ../JointNode.hpp \
+ ../A5.hpp ../GridSubdivision.hpp ../ThreadPool.hpp
 
 ../scene_lua.hpp:
 
@@ -261,8 +261,6 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
 
 ../../shared/include/glm/detail/func_integer.inl:
 
-../Mesh.hpp:
-
 ../Primitive.hpp:
 
 ../../shared/include/glm/gtx/norm.hpp:
@@ -304,6 +302,8 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
 ../../shared/include/glm/gtx/rotate_vector.inl:
 
 ../VarHolder.hpp:
+
+../Mesh.hpp:
 
 ../GeometryNode.hpp:
 

@@ -214,7 +214,9 @@ Debug/Light.o: ../Light.cpp ../../shared/include/glm/ext.hpp \
  ../../shared/include/glm/./gtx/simd_mat4.hpp \
  ../../shared/include/glm/./gtx/../detail/intrinsic_matrix.hpp \
  ../../shared/include/glm/./gtx/../detail/intrinsic_matrix.inl \
- ../../shared/include/glm/./gtx/simd_mat4.inl ../Light.hpp
+ ../../shared/include/glm/./gtx/simd_mat4.inl ../Light.hpp \
+ ../Primitive.hpp ../polyroots.hpp ../PhongMaterial.hpp ../Material.hpp \
+ ../Texture.hpp ../Image.hpp ../VarHolder.hpp
 
 ../../shared/include/glm/ext.hpp:
 
@@ -651,3 +653,17 @@ Debug/Light.o: ../Light.cpp ../../shared/include/glm/ext.hpp \
 ../../shared/include/glm/./gtx/simd_mat4.inl:
 
 ../Light.hpp:
+
+../Primitive.hpp:
+
+../polyroots.hpp:
+
+../PhongMaterial.hpp:
+
+../Material.hpp:
+
+../Texture.hpp:
+
+../Image.hpp:
+
+../VarHolder.hpp:

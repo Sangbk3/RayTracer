@@ -81,3 +81,6 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 float fresnelR(float iori, float iort, float cosi, float cost);
 
 glm::vec3 getLightPosition(Light *light, int count, int total, glm::vec3 &point);
+
+void rungekutta(glm::vec3 &yn, glm::vec3 &mn, float dt, PointMass *pmass);
+glm::vec3 getForceField(float t, glm::vec3 y, glm::vec3 m, glm::vec3 mass);
