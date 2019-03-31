@@ -1,6 +1,7 @@
 // Winter 2019
 
 #include "PhongMaterial.hpp"
+#include "Texture.hpp"
 
 PhongMaterial::PhongMaterial(
 	const glm::vec3& kd, const glm::vec3& ks, double shininess )
@@ -22,6 +23,11 @@ PhongMaterial::PhongMaterial(
 	, refractIndex(ior)
 	, perturb(perturb)
 {}
+
+void PhongMaterial::setTexture(Texture *t) {
+	texture = t;
+	hasTexture = true;
+}
 
 PhongMaterial::~PhongMaterial()
 {}

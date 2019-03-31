@@ -3,11 +3,18 @@
 #include "Primitive.hpp"
 #include <iostream>
 
+float PI = 3.14159265359f;
 Primitive::~Primitive()
 {
 
 }
-bool Primitive::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+
+void Primitive::setMaterial(Material *pmat) {
+    PhongMaterial *mat = static_cast<PhongMaterial *>(pmat);
+    material = mat;
+}
+
+bool Primitive::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
     return false;
 }
 
@@ -23,7 +30,7 @@ Sphere::~Sphere()
 {
     
 }
-bool Sphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+bool Sphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
     double roots[2];
     double aterm = pow(slope[0], 2) + pow(slope[1], 2) + pow(slope[2], 2);
     double bterm = 2 * (slope[0] * origin[0] + slope[1] * origin[1] + slope[2] * origin[2]);
@@ -33,10 +40,12 @@ bool Sphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 
     if (numroot == 1) {
         t = roots[0];
         normal = origin + slope*((float) t);
+        getUV(normal, u, v);
         return true;
     } else if (numroot == 2) {
         t = glm::min(roots[0], roots[1]);
         normal = origin + slope*((float) t);
+        getUV(normal, u, v);
         return true;
     }
     
@@ -50,9 +59,9 @@ Cube::Cube() {
 Cube::~Cube()
 {
 }
-bool Cube::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+bool Cube::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
     NonhierBox b = NonhierBox(glm::vec3(0.0, 0.0, 0.0), 1);
-    return b.intersects(origin, slope, t, normal);
+    return b.intersects(origin, slope, t, normal, u, v);
 }
 
 glm::vec3 getPointAt(glm::vec3 origin, glm::vec3 slope, double t) {
@@ -67,7 +76,7 @@ NonhierSphere::NonhierSphere(const glm::vec3& pos, double radius)
 NonhierSphere::~NonhierSphere()
 {
 }
-bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
     double roots[2];
     glm::vec3 ori = origin - m_pos;
     double aterm = pow(slope[0], 2)/pow(m_radius, 2) + pow(slope[1], 2)/pow(m_radius, 2) + pow(slope[2], 2)/pow(m_radius, 2);
@@ -78,12 +87,30 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
     if (numroot == 1) {
         t = roots[0];
         // std::cout << t << " \n";
-        normal = (ori + slope*((float) t))/((float) m_radius);
+        glm::vec3 poi = origin + slope*((float) t);
+        normal = glm::normalize(ori + slope*((float) t));
+        if (material->hasTexture) {
+            getUVNormal(poi, u, v, normal);
+        } else {
+            getUV(poi, u, v);
+        }
         return true;
     } else if (numroot == 2) {
-        t = glm::min(roots[0], roots[1]);
+        if (roots[0] < 0.001) {
+            t = roots[1];
+        } else if (roots[1] < 0.001) {
+            t = roots[0];
+        } else {
+            t = glm::min(roots[0], roots[1]);
+        }
         // std::cout << t << " \n";
-        normal = (ori + slope*((float) t))/((float) m_radius);
+        glm::vec3 poi = origin + slope*((float) t);
+        normal = glm::normalize(ori + slope*((float) t));
+        if (material->hasTexture) {
+            getUVNormal(poi, u, v, normal);
+        } else {
+            getUV(poi, u, v);
+        }
         return true;
     }
     
@@ -98,7 +125,7 @@ NonhierBox::NonhierBox(const glm::vec3& pos, double size)
 NonhierBox::~NonhierBox()
 {
 }
-bool NonhierBox::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+bool NonhierBox::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
     glm::vec3 cori = origin - m_pos;
     double clen = m_size;
     bool result = false;
@@ -159,5 +186,77 @@ bool NonhierBox::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::v
         result = true;
     }
 
+    if (result) {
+        glm::vec3 ip = getPointAt(origin, slope, t);
+        getUV(ip, u, v);
+    }
     return result;
+}
+
+void Cube::getUV(glm::vec3 &at, float &u, float &v) {
+    return boundingSphere->getUV(at, u, v);   
+}
+
+void NonhierBox::getUV(glm::vec3 &at, float &u, float &v) {
+    return boundingSphere->getUV(at, u, v);   
+}
+
+void Sphere::getUV(glm::vec3 &at, float &u, float &v) {
+    float theta;
+    glm::vec3 diff = at;
+    if (diff[2] == 0 && diff[0] == 0) {
+        theta = PI / 2;
+    } else {
+        theta = atan2(-(diff[2]), diff[0]);
+    }
+    float phi = acos(std::min(1.f, std::max(-1.f, -(diff[1]))));
+    u = (theta + PI) / (2*PI);
+    v = phi/PI;
+}
+
+void NonhierSphere::getUV(glm::vec3 &at, float &u, float &v) {
+    float theta;
+    glm::vec3 diff = at - m_pos;
+    if (diff[2] == 0 && diff[0] == 0) {
+        theta = PI / 2;
+    } else {
+        theta = atan2(-(diff[2]), diff[0]);
+    }
+    float phi = acos(std::min(1.0, std::max(-1.0, -(diff[1])/m_radius)));
+    u = (theta + PI) / (2*PI);
+    v = phi/PI;
+    // if (phi == 0) {
+    // std::cout << "\n"<< at[1] << " " << m_pos[1] << " "<< m_radius << " " << -(at[1] - m_pos[1])/m_radius <<std::endl;
+    // }
+}
+
+void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &normal) {
+    float epsilon = 0.005;
+
+    float theta;
+    glm::vec3 diff = at - m_pos;
+    if (diff[2] == 0 && diff[0] == 0) {
+        theta = PI / 2;
+    } else {
+        theta = atan2(-(diff[2]), diff[0]);
+    }
+    float phi = acos(std::min(1.0, std::max(-1.0, -(diff[1])/m_radius)));
+    u = (theta + PI) / (2*PI);
+    v = phi/PI;
+    
+    float scale = (2048.f/material->texture->texture->width());
+    u = u*scale;
+    v = v*scale;
+
+    glm::vec3 pu = glm::vec3(-sin(theta), 0, cos(theta));
+    glm::vec3 pv = glm::cross(normal, pu);
+
+    float uep = u + epsilon*scale;
+    float vep = v + epsilon*scale;
+
+    float du = glm::length2(material->texture->getColorAtUV(u, v)) - glm::length2(material->texture->getColorAtUV(uep, v));
+    float dv = glm::length2(material->texture->getColorAtUV(u, v)) - glm::length2(material->texture->getColorAtUV(u, vep));
+
+    glm::vec3 result = normal + (du * glm::cross(normal, pv) - dv * glm::cross(normal, pu))/glm::length2(normal);
+    normal = result;
 }

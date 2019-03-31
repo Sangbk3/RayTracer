@@ -9,5 +9,8 @@ int VarHolder::subdivideDepth = 0;
 bool VarHolder::showNormal = false;
 bool VarHolder::showGloss = false;
 bool VarHolder::softenShadow = false;
+bool VarHolder::useTexture = false;
+
+int VarHolder::time = 0;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);
 std::mt19937 VarHolder::generator;

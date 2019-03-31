@@ -73,7 +73,22 @@ Debug/Primitive.o: ../Primitive.cpp ../Primitive.hpp \
  ../../shared/include/glm/vector_relational.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
- ../../shared/include/glm/detail/func_integer.inl ../polyroots.hpp
+ ../../shared/include/glm/detail/func_integer.inl \
+ ../../shared/include/glm/gtx/norm.hpp \
+ ../../shared/include/glm/gtx/../gtx/quaternion.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/constants.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/constants.inl \
+ ../../shared/include/glm/gtx/../gtx/../gtc/quaternion.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/quaternion.inl \
+ ../../shared/include/glm/gtx/../gtx/quaternion.inl \
+ ../../shared/include/glm/gtx/norm.inl ../polyroots.hpp \
+ ../PhongMaterial.hpp ../Material.hpp ../Texture.hpp ../Image.hpp \
+ ../../shared/include/glm/gtx/rotate_vector.hpp \
+ ../../shared/include/glm/gtx/../gtx/transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
+ ../../shared/include/glm/gtx/../gtx/transform.inl \
+ ../../shared/include/glm/gtx/rotate_vector.inl
 
 ../Primitive.hpp:
 
@@ -227,4 +242,40 @@ Debug/Primitive.o: ../Primitive.cpp ../Primitive.hpp \
 
 ../../shared/include/glm/detail/func_integer.inl:
 
+../../shared/include/glm/gtx/norm.hpp:
+
+../../shared/include/glm/gtx/../gtx/quaternion.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/constants.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/constants.inl:
+
+../../shared/include/glm/gtx/../gtx/../gtc/quaternion.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/quaternion.inl:
+
+../../shared/include/glm/gtx/../gtx/quaternion.inl:
+
+../../shared/include/glm/gtx/norm.inl:
+
 ../polyroots.hpp:
+
+../PhongMaterial.hpp:
+
+../Material.hpp:
+
+../Texture.hpp:
+
+../Image.hpp:
+
+../../shared/include/glm/gtx/rotate_vector.hpp:
+
+../../shared/include/glm/gtx/../gtx/transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl:
+
+../../shared/include/glm/gtx/../gtx/transform.inl:
+
+../../shared/include/glm/gtx/rotate_vector.inl:

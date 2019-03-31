@@ -41,6 +41,10 @@ Image::Image(const Image & other)
   }
 }
 
+Image::Image(const std::string & filename) {
+  loadPng(filename);
+}
+
 //---------------------------------------------------------------------------------------
 Image::~Image()
 {
@@ -125,6 +129,40 @@ bool Image::savePng(const std::string & filename) const
 	return true;
 }
 
+bool Image::loadPng(const std::string & filename) {
+
+  //load and decode
+  std::vector<unsigned char> image;
+  unsigned width, height;
+  unsigned error = lodepng::decode(image, width, height, filename, LCT_RGB);
+  //if there's an error, display it
+  if (error) {
+    std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+  }
+
+  m_height = height;
+  m_width = width;
+  std::cout << width << " " << height << std::endl;
+  
+	size_t numElements = m_width * m_height * m_colorComponents;
+	m_data = new double[numElements];
+	memset(m_data, 0, numElements*sizeof(double));
+
+  double color;
+	for (uint y(0); y < height; y++) {
+		for (uint x(0); x < width; x++) {
+			for (uint i(0); i < m_colorComponents; ++i) {
+        color = image[m_colorComponents * (width * y + x) + i];
+        m_data[m_colorComponents * (width * y + x) + i] = color/255.0;
+			}
+		}
+	}
+
+  return true;
+
+  //the pixels are now in the vector "image", 4 bytes per pixel, ordered RGBARGBA..., use it as texture, draw it, ...
+}
+
 //---------------------------------------------------------------------------------------
 const double * Image::data() const
 {
@@ -135,4 +173,11 @@ const double * Image::data() const
 double * Image::data()
 {
   return m_data;
+}
+
+double Image::getDataAt(int x, int y, int i) {
+  // std::cout << "\n returning " << x << " " << y << " " << i << std::endl;
+  int lx = x % m_width;
+  int ly = y % m_height;
+  return m_data[m_colorComponents * (m_width * ly + lx) + i];
 }

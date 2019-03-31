@@ -3,6 +3,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 typedef unsigned int uint;
 
@@ -25,6 +26,8 @@ public:
 	// Copy an image.
 	Image(const Image & other);
 
+	Image(const std::string & filename);
+
 	~Image();
 
 	// Copy the data from one image to another.
@@ -45,9 +48,12 @@ public:
 	// Save this image into the PNG file with name 'filename'.
 	// Warning: If 'filename' already exists, it will be overwritten.
 	bool savePng(const std::string & filename) const;
+	bool loadPng(const std::string & filename);
 
 	const double * data() const;
 	double * data();
+
+	double getDataAt(int x, int y, int i);
 
 private:
 	uint m_width;

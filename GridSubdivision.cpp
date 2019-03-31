@@ -35,7 +35,7 @@ GridSubdivision::GridSubdivision( SceneNode * root, int depth, glm::vec3 eye, gl
     totalDepth = depth;
 }
 
-void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, SceneNode **rNode, bool &result) {
+void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, float &u, float &v, SceneNode **rNode, bool &result) {
     glm::vec3 position;
     
 	std::unordered_set<uint> checkedIndices;
@@ -157,7 +157,7 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
     
     while (gridi < numRows && gridj < numRows && gridk < numRows && gridi >= 0 && gridj >= 0 && gridk >= 0) {
 
-        checkIntersection(gridi, gridj, gridk, origin, slope, t, normal, rNode, checkedIndices, result);
+        checkIntersection(gridi, gridj, gridk, origin, slope, t, normal, u, v, rNode, checkedIndices, result);
 
         float xt = (tX*(distX - errX))/distX;
         float yt = (tY*(distY - errY))/distY;
@@ -202,7 +202,7 @@ void GridSubdivision::do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::
 
 void GridSubdivision::checkIntersection(
     int i, int j, int k, glm::vec3 origin, glm::vec3 slope,
-    float &t, glm::vec3 &normal, SceneNode **rNode, std::unordered_set<uint> &checkedIndices, bool &result) {
+    float &t, glm::vec3 &normal, float &u, float &v, SceneNode **rNode, std::unordered_set<uint> &checkedIndices, bool &result) {
 
     for (uint ind : lattice.at(i*pow(4, totalDepth) + j*pow(2, totalDepth) + k)) {
         if (checkedIndices.find(ind) != checkedIndices.end()) {
@@ -218,13 +218,18 @@ void GridSubdivision::checkIntersection(
             glm::vec3 invO = glm::vec3(conv->invTrans*glm::vec4(origin, 1));
             glm::vec3 invM = glm::vec3(conv->invTrans*glm::vec4(slope, 0));
 
-            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn) && temp > 0.001) {
+            float tu, tv;
+
+            if ((*casted).m_primitive->intersects(invO, invM, temp, tempn, tu, tv) && temp > 0.001) {
 
                 if (!result || t > temp) {
                     t = temp;
 
                     normal = normalize(glm::vec3(glm::transpose(conv->invTrans) * glm::vec4(tempn, 0)));
                     *rNode = conv->node;
+
+                    u = tu;
+                    v = tv;
                     result = true;
                 }
             }

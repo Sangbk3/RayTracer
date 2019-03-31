@@ -58,7 +58,7 @@ Mesh::Mesh( const std::string& fname )
 }
 
 
-bool Mesh::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) {
+bool Mesh::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) {
 	if (VarHolder::showBoundingBox) {
 		double temp;
 		glm::vec3 tempn;
@@ -110,6 +110,11 @@ bool Mesh::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &n
 					}
 				}
 			}
+
+            if (result) {
+                glm::vec3 ip = getPointAt(origin, slope, t);
+                getUV(ip, u, v);
+            }
 
 			return result;
 		}
@@ -257,4 +262,8 @@ std::ostream& operator<<(std::ostream& out, const Mesh& mesh)
 */
   out << "}";
   return out;
+}
+
+void Mesh::getUV(glm::vec3 &at, float &u, float &v) {
+    boundingSphere->getUV(at, u, v);
 }

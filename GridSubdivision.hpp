@@ -26,11 +26,11 @@ public:
     GridSubdivision( SceneNode *root, int depth, glm::vec3 eye, glm::vec3 view, float fov, float aspect );
     void checkIntersection(
         int i, int j, int k, glm::vec3 origin, glm::vec3 slope,
-        float &t, glm::vec3 &normal, SceneNode **rNode,
+        float &t, glm::vec3 &normal, float &u, float &v, SceneNode **rNode,
         std::unordered_set<uint> &checkedIndices, bool &result);
 
     void findSceneBorder(float &xmin, float &xmax, float &ymin, float &ymax, float &zmin, float &zmax);
-    void do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, SceneNode **rNode, bool &result);
+    void do3DDDA(glm::vec3 origin, glm::vec3 slope, float &t, glm::vec3 &normal, float &u, float &v, SceneNode **rNode, bool &result);
   
 private:
     void subdivide(std::vector<uint> objIndices, int depth, int i, int j, int k, int totalDepth);

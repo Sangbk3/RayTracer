@@ -1,11 +1,14 @@
 -- A simple scene with some miscellaneous geometry.
+juptexture = gr.texture('jupiter.png')
+eartext = gr.texture('earth.png')
 
 mat1 = gr.material({0.7, 1.0, 0.7}, {0.5, 0.7, 0.5}, 25)
 mat2 = gr.sangmaterial({0.2, 0.2, 0.3}, {1.0, 1.0, 1.0}, {0.0, 0.0, 0.0}, 25, 1, 10000)
 mat3 = gr.material({1.0, 0.6, 0.1}, {0.5, 0.7, 0.5}, 25)
 mat4 = gr.material({0.7, 0.6, 1.0}, {0.5, 0.4, 0.8}, 25)
 sangmat = gr.sangmaterial({0.0, 0.1, 0.0}, {0.0, 0.1, 0.0}, {1.0, 1.0, 1.0}, 25, 1.2, -2)
-
+mat5 = gr.material({1,1,1}, {0,0,0}, 15)
+mat5:set_texture(eartext)
 scene_root = gr.node('root')
 
 s1 = gr.nh_sphere('s1', {0, 0, -400}, 100)
@@ -23,7 +26,7 @@ s3:set_material(mat2)
 b1 = gr.nh_box('b1', {-200, 0, 0}, 100)
 scene_root:add_child(b1)
 b1:translate(0, 0, 0)
-b1:set_material(mat2)
+b1:set_material(mat5)
 
 s4 = gr.nh_sphere('s4', {-100, 25, -300}, 50)
 scene_root:add_child(s4)

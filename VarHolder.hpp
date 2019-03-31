@@ -14,6 +14,8 @@ class VarHolder {
 	static bool showNormal;
 	static bool showGloss;
 	static bool softenShadow;
+	static bool useTexture;
+	static int time;
 	static std::uniform_real_distribution<> dist;
 	static std::mt19937 generator;
 };

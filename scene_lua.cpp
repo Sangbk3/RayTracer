@@ -102,6 +102,10 @@ struct gr_light_ud {
   Light* light;
 };
 
+struct gr_texture_ud {
+  Texture* texture;
+};
+
 // Useful function to retrieve and check an n-tuple of numbers.
 template<typename T>
 void get_tuple(lua_State* L, int arg, T* data, int n)
@@ -437,6 +441,25 @@ int gr_sangmaterial_cmd(lua_State* L)
   return 1;
 }
 
+extern "C"
+int gr_texture_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_texture_ud* data = (gr_texture_ud*)lua_newuserdata(L, sizeof(gr_texture_ud));
+  data->texture = 0;
+  
+  const char* filename = luaL_checkstring(L, 1);
+  std::string fname = filename;
+  fname = "Assets/" + fname;
+  data->texture = new Texture(fname);
+
+  luaL_newmetatable(L, "gr.texture");
+  lua_setmetatable(L, -2);
+  
+  return 1;
+}
+
 // Add a Child to a node
 extern "C"
 int gr_node_add_child_cmd(lua_State* L)
@@ -477,6 +500,29 @@ int gr_node_set_material_cmd(lua_State* L)
   Material* material = matdata->material;
 
   self->setMaterial(material);
+
+  return 0;
+}
+
+// Set a node's Texture
+extern "C"
+int gr_material_set_texture_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_material_ud* selfdata = (gr_material_ud*)luaL_checkudata(L, 1, "gr.material");
+  luaL_argcheck(L, selfdata != 0, 1, "Material expected");
+
+  PhongMaterial* self = dynamic_cast<PhongMaterial*>(selfdata->material);
+
+  luaL_argcheck(L, self != 0, 1, "PhongMaterial node expected");
+  
+  gr_texture_ud* textureData = (gr_texture_ud*)luaL_checkudata(L, 2, "gr.texture");
+  luaL_argcheck(L, textureData != 0, 2, "Texture expected");
+
+  Texture* texture = textureData->texture;
+
+  self->setTexture(texture);
 
   return 0;
 }
@@ -581,7 +627,8 @@ static const luaL_Reg grlib_functions[] = {
   {"joint", gr_joint_cmd},
   {"material", gr_material_cmd},
   {"sangmaterial", gr_sangmaterial_cmd},
-  // New for assignment 4
+  {"texture", gr_texture_cmd},
+
   {"cube", gr_cube_cmd},
   {"nh_sphere", gr_nh_sphere_cmd},
   {"nh_box", gr_nh_box_cmd},
@@ -615,6 +662,12 @@ static const luaL_Reg grlib_node_methods[] = {
   {0, 0}
 };
 
+
+static const luaL_Reg grlib_material_methods[] = {
+  {"set_texture", gr_material_set_texture_cmd},
+  {0, 0}
+};
+
 // This function calls the lua interpreter to define the scene and
 // raytrace it as appropriate.
 bool run_lua(const std::string& filename)
@@ -639,6 +692,15 @@ bool run_lua(const std::string& filename)
 
   // Load the gr.node methods
   luaL_setfuncs( L, grlib_node_methods, 0 );
+
+
+  // Set up the metatable for gr.material
+  luaL_newmetatable(L, "gr.material");
+  lua_pushstring(L, "__index");
+  lua_pushvalue(L, -2);
+  lua_settable(L, -3);
+
+  luaL_setfuncs( L, grlib_material_methods, 0 );
 
   // Load the gr functions
   luaL_setfuncs(L, grlib_functions, 0);

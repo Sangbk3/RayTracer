@@ -77,9 +77,23 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
  ../../shared/include/glm/detail/func_integer.inl ../Mesh.hpp \
- ../Primitive.hpp ../polyroots.hpp ../VarHolder.hpp ../GeometryNode.hpp \
- ../SceneNode.hpp ../Material.hpp ../JointNode.hpp ../PhongMaterial.hpp \
- ../A5.hpp ../Image.hpp ../GridSubdivision.hpp ../ThreadPool.hpp
+ ../Primitive.hpp ../../shared/include/glm/gtx/norm.hpp \
+ ../../shared/include/glm/gtx/../gtx/quaternion.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/constants.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/constants.inl \
+ ../../shared/include/glm/gtx/../gtx/../gtc/quaternion.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/quaternion.inl \
+ ../../shared/include/glm/gtx/../gtx/quaternion.inl \
+ ../../shared/include/glm/gtx/norm.inl ../polyroots.hpp \
+ ../PhongMaterial.hpp ../Material.hpp ../Texture.hpp ../Image.hpp \
+ ../../shared/include/glm/gtx/rotate_vector.hpp \
+ ../../shared/include/glm/gtx/../gtx/transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
+ ../../shared/include/glm/gtx/../gtx/transform.inl \
+ ../../shared/include/glm/gtx/rotate_vector.inl ../VarHolder.hpp \
+ ../GeometryNode.hpp ../SceneNode.hpp ../JointNode.hpp ../A5.hpp \
+ ../GridSubdivision.hpp ../ThreadPool.hpp
 
 ../scene_lua.hpp:
 
@@ -251,7 +265,43 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
 
 ../Primitive.hpp:
 
+../../shared/include/glm/gtx/norm.hpp:
+
+../../shared/include/glm/gtx/../gtx/quaternion.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/constants.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/constants.inl:
+
+../../shared/include/glm/gtx/../gtx/../gtc/quaternion.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/quaternion.inl:
+
+../../shared/include/glm/gtx/../gtx/quaternion.inl:
+
+../../shared/include/glm/gtx/norm.inl:
+
 ../polyroots.hpp:
+
+../PhongMaterial.hpp:
+
+../Material.hpp:
+
+../Texture.hpp:
+
+../Image.hpp:
+
+../../shared/include/glm/gtx/rotate_vector.hpp:
+
+../../shared/include/glm/gtx/../gtx/transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl:
+
+../../shared/include/glm/gtx/../gtx/transform.inl:
+
+../../shared/include/glm/gtx/rotate_vector.inl:
 
 ../VarHolder.hpp:
 
@@ -259,15 +309,9 @@ Debug/scene_lua.o: ../scene_lua.cpp ../scene_lua.hpp ../lua488.hpp \
 
 ../SceneNode.hpp:
 
-../Material.hpp:
-
 ../JointNode.hpp:
 
-../PhongMaterial.hpp:
-
 ../A5.hpp:
-
-../Image.hpp:
 
 ../GridSubdivision.hpp:
 

@@ -48,6 +48,16 @@ int main(int argc, char** argv)
       if (std::string(argv[i]) == "-Z") {
         VarHolder::softenShadow = true;
       }
+      if (std::string(argv[i]) == "-t") {
+        VarHolder::useTexture = true;
+      }
+
+      if (std::string(argv[i]) == "-a") {
+        if (i + 1 < argc) {
+          VarHolder::time = std::stoi(std::string(argv[i+1]));
+          i++;
+        }
+      }
     }
   }
 

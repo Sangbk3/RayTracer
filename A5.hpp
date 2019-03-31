@@ -46,15 +46,15 @@ void setPixelOfImage(
 glm::mat4 getPixelToWorldTransform(Image image, double fovy, glm::vec3 view, glm::vec3 up, glm::vec3 eye);
 void getClosestObjectPoint(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, PhongMaterial **mat, bool &result, glm::mat4 parentInv);
+	float &t, glm::vec3 &normal, float &u, float &v, PhongMaterial **mat, bool &result, glm::mat4 parentInv);
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, bool &result, SceneNode **rNode,
+	float &t, glm::vec3 &normal, float &u, float &v, bool &result, SceneNode **rNode,
 	 GridSubdivision *gridSubdivision);
 
 glm::vec3 getColorAtPoint(
-	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 norm, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
+	glm::vec3 origin, glm::vec3 slope, float t, glm::vec3 norm, float &u, float &v, PhongMaterial *mat, std::list<Light *> lights, glm::vec3 ambient,
 	SceneNode * root,
 	GridSubdivision *gridSubdivision,
 	int numReflected,

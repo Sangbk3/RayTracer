@@ -29,6 +29,10 @@ void A5_Render(
 ) {
 	std::vector<std::thread> myThreads;
 
+	for (Light *l : lights) {
+		l->position[0] += VarHolder::time;
+	}
+
 	// Fill in raytracing code here...  
 	int pwidth = image.width();
 	int pheight = image.height();
@@ -111,18 +115,19 @@ void setPixelOfImage(
 		glm::vec3 normal = glm::vec3();
 		float t = -1.f;
 		PhongMaterial *mat;
+		float u, v;
 		bool result = false;
 
 		if (VarHolder::useSubdivision) {
 			SceneNode *rNode;
-			getClosestObjectPointUseGrid(root, eye, m, t, normal, result, &rNode, gridSubdivision);
+			getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
 
 			if (result) {
 				GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 				mat = static_cast<PhongMaterial*>(casted->m_material);
 			}
 		} else {
-			getClosestObjectPoint(root, eye, m, t, normal, &mat, result, glm::mat4(1.f));
+			getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
 		}
 
 		if (!result) {
@@ -135,7 +140,7 @@ void setPixelOfImage(
 			pixelColors[y*h + x][2] = 0.7;
 
 		} else {
-			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, mat, lights, ambient, root, gridSubdivision, 0, 0);
+			glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
 			if (VarHolder::showNormal) {
 				colorHere = normal;
 			}
@@ -151,15 +156,15 @@ void setPixelOfImage(
 
 void getClosestObjectPointUseGrid(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, bool &result, SceneNode **rNode,
+	float &t, glm::vec3 &normal, float &u, float &v, bool &result, SceneNode **rNode,
 	GridSubdivision *gridSubdivision) {
 
-	gridSubdivision->do3DDDA(origin, slope, t, normal, rNode, result);
+	gridSubdivision->do3DDDA(origin, slope, t, normal, u, v, rNode, result);
 }
 
 void getClosestObjectPoint(
 	SceneNode *node, glm::vec3 origin, glm::vec3 slope,
-	float &t, glm::vec3 &normal, PhongMaterial **mat, bool &result, glm::mat4 parentInv) {
+	float &t, glm::vec3 &normal, float &u, float &v, PhongMaterial **mat, bool &result, glm::mat4 parentInv) {
 		
 	glm::vec4 invO = node->get_inverse() * glm::vec4(origin, 1);
 	glm::vec3 invOrigin = glm::vec3(invO);
@@ -170,12 +175,15 @@ void getClosestObjectPoint(
 		double temp;
 		glm::vec3 tempn;
 		GeometryNode *casted = static_cast<GeometryNode*>(node);
+		float tu, tv;
 
-		if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn) && temp > 0.01) {
+		if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn, tu, tv) && temp > 0.01) {
 			if (!result || t > temp) {
 				t = temp;
 				normal = glm::normalize(glm::vec3(glm::transpose(newT) * glm::vec4(tempn, 0)));
 				*mat = static_cast<PhongMaterial*>(casted->m_material);
+				u = tu;
+				v = tv;
 
 				result = true;
 			}
@@ -183,13 +191,14 @@ void getClosestObjectPoint(
 	}
 
 	for (SceneNode *child : node->children) {
-		getClosestObjectPoint(child, invOrigin, invSlope, t, normal, mat, result, newT);
+		getClosestObjectPoint(child, invOrigin, invSlope, t, normal, u, v, mat, result, newT);
 	}
 }
 
 glm::vec3 getColorAtPoint(
 	glm::vec3 origin, glm::vec3 slope, float t,
-	glm::vec3 normal, 
+	glm::vec3 normal,
+	float &u, float &v,
 	PhongMaterial *mat,
 	std::list<Light *> lights,
 	glm::vec3 ambient,
@@ -200,13 +209,25 @@ glm::vec3 getColorAtPoint(
 
 	glm::vec3 point = origin + slope * t;
 
+	glm::vec3 kd = mat->m_kd;
+	if (mat->hasTexture && VarHolder::useTexture) {
+		glm::vec3 textCol = mat->texture->getColorAtUV(u,v);
+		kd[0] = mat->m_kd[0]*textCol[0];
+		kd[1] = mat->m_kd[1]*textCol[1];
+		kd[2] = mat->m_kd[2]*textCol[2];
+	}
+	glm::vec3 pnorm = normal;
+	if (mat->hasTexture) {
+		// pnorm = mat->texture->getNormalAtUV(u,v, normal);
+	}
+
 	glm::vec3 resultv = glm::vec3(0.f);
-	resultv[0] += (mat)->m_kd[0]*ambient[0];
-	resultv[1] += (mat)->m_kd[1]*ambient[1];
-	resultv[2] += (mat)->m_kd[2]*ambient[2];
+	resultv[0] += kd[0]*ambient[0];
+	resultv[1] += kd[1]*ambient[1];
+	resultv[2] += kd[2]*ambient[2];
 
 	glm::vec3 m = -1*normalize(slope);
-	glm::vec3 n = normalize(normal);
+	glm::vec3 n = normalize(pnorm);
 
 	// shadow rays (diffuse component)
 	if (glm::length2((mat)->m_kd) != 0) {
@@ -239,24 +260,25 @@ glm::vec3 getColorAtPoint(
 					glm::vec3 randPos = l->position + glm::rotate(pp*r, angle, lv);
 
 					glm::vec3 lin = normalize(randPos - point);
+					float u,v;
 
 					bool result = false;
 
 					if (VarHolder::useSubdivision) {
 						SceneNode *rNode;
 
-						getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, &rNode, gridSubdivision);
+						getClosestObjectPointUseGrid(root, point, lin, tt, normall, u, v, result, &rNode, gridSubdivision);
 					} else {
-						getClosestObjectPoint(root, point, lin, tt, normall, &dMat, result, glm::mat4(1.f));
+						getClosestObjectPoint(root, point, lin, tt, normall, u, v, &dMat, result, glm::mat4(1.f));
 					}
 					if (!result) {
 						float ld = distance(l->position, origin);
 						float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
 						glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
 
-						resC[0] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
-						resC[1] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
-						resC[2] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+						resC[0] += glm::max(0.f, glm::min(1.f, (float) (kd[0]*glm::dot(n, lin))));// + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
+						resC[1] += glm::max(0.f, glm::min(1.f, (float) (kd[1]*glm::dot(n, lin))));// + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
+						resC[2] += glm::max(0.f, glm::min(1.f, (float) (kd[2]*glm::dot(n, lin))));// + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
 					}
 				}
 
@@ -268,24 +290,25 @@ glm::vec3 getColorAtPoint(
 				float tt = -1.f;
 				PhongMaterial *dMat;
 				glm::vec3 lin = normalize(l->position - point);
-
+				float ttl = glm::distance(l->position, point) / glm::length2(lin);
+				float tu, tv;
 				bool result = false;
 
 				if (VarHolder::useSubdivision) {
 					SceneNode *rNode;
 
-					getClosestObjectPointUseGrid(root, point, lin, tt, normall, result, &rNode, gridSubdivision);
+					getClosestObjectPointUseGrid(root, point, lin, tt, normall, tu, tv, result, &rNode, gridSubdivision);
 				} else {
-					getClosestObjectPoint(root, point, lin, tt, normall, &dMat, result, glm::mat4(1.f));
+					getClosestObjectPoint(root, point, lin, tt, normall, tu, tv, &dMat, result, glm::mat4(1.f));
 				}
-				if (!result) {
+				if (!result || tt > ttl) {
 					float ld = distance(l->position, origin);
 					float coeff = l->falloff[0] + l->falloff[1]*ld + l->falloff[2]*pow(ld, 2);
 					glm::vec3 r = normalize(-1*lin + 2*glm::dot(lin, n)*n);
-
-					resultv[0] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
-					resultv[1] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
-					resultv[2] += glm::max(0.f, glm::min(1.f, (float) ((mat)->m_kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
+				
+					resultv[0] += glm::max(0.f, glm::min(1.f, (float) (kd[0]*glm::dot(n, lin) + ((mat)->m_ks[0])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[0]/coeff));
+					resultv[1] += glm::max(0.f, glm::min(1.f, (float) (kd[1]*glm::dot(n, lin) + ((mat)->m_ks[1])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[1]/coeff));
+					resultv[2] += glm::max(0.f, glm::min(1.f, (float) (kd[2]*glm::dot(n, lin) + ((mat)->m_ks[2])*pow(glm::dot(r, m), (mat)->m_shininess))*l->colour[2]/coeff));
 				}
 			}
 		}
@@ -322,6 +345,7 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 	float transt = -1.f;
 	PhongMaterial *tMat;
 	bool tres = false;
+	float tu, tv;
 
 	if (VarHolder::showGloss && mat->perturb >= 0) {
 		int numIter = 4;
@@ -351,17 +375,17 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 			if (refractRatio > 0) {
 				if (VarHolder::useSubdivision) {
 					SceneNode *rNode;
-					getClosestObjectPointUseGrid(root, point - tL*0.002, tL, transt, tnorm, tres, &rNode, gridSubdivision);
+					getClosestObjectPointUseGrid(root, point - tL*0.002, tL, transt, tnorm, tu, tv, tres, &rNode, gridSubdivision);
 					if (tres) {
 						GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 						tMat = static_cast<PhongMaterial*>(casted->m_material);
 					}
 				} else {
-					getClosestObjectPoint(root, point - tL*0.002, tL, transt, tnorm, &tMat, tres, glm::mat4(1.f));
+					getClosestObjectPoint(root, point - tL*0.002, tL, transt, tnorm, tu, tv, &tMat, tres, glm::mat4(1.f));
 				}
 				
 				if (tres) {
-					glm::vec3 transL = getColorAtPoint(point, tL, transt, tnorm, tMat, lights, ambient, root, gridSubdivision, numReflected, numTransmitted + 1);
+					glm::vec3 transL = getColorAtPoint(point, tL, transt, tnorm, tu, tv, tMat, lights, ambient, root, gridSubdivision, numReflected, numTransmitted + 1);
 					resC[0] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[0]*refractRatio*transL[0]));
 					resC[1] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[1]*refractRatio*transL[1]));
 					resC[2] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[2]*refractRatio*transL[2]));
@@ -397,17 +421,17 @@ void sangRefract(glm::vec3 point, glm::vec3 slope, glm::vec3 n, PhongMaterial *m
 		if (refractRatio > 0) {
 			if (VarHolder::useSubdivision) {
 				SceneNode *rNode;
-				getClosestObjectPointUseGrid(root, point - tL*0.002, tL, transt, tnorm, tres, &rNode, gridSubdivision);
+				getClosestObjectPointUseGrid(root, point - tL*0.002, tL, transt, tnorm, tu, tv, tres, &rNode, gridSubdivision);
 				if (tres) {
 					GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 					tMat = static_cast<PhongMaterial*>(casted->m_material);
 				}
 			} else {
-				getClosestObjectPoint(root, point - tL*0.002, tL, transt, tnorm, &tMat, tres, glm::mat4(1.f));
+				getClosestObjectPoint(root, point - tL*0.002, tL, transt, tnorm, tu, tv, &tMat, tres, glm::mat4(1.f));
 			}
 			
 			if (tres) {
-				glm::vec3 transL = getColorAtPoint(point, tL, transt, tnorm, tMat, lights, ambient, root, gridSubdivision, numReflected, numTransmitted + 1);
+				glm::vec3 transL = getColorAtPoint(point, tL, transt, tnorm, tu, tv, tMat, lights, ambient, root, gridSubdivision, numReflected, numTransmitted + 1);
 				resultv[0] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[0]*refractRatio*transL[0]));
 				resultv[1] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[1]*refractRatio*transL[1]));
 				resultv[2] += glm::max(0.f, glm::min(1.f, (float) (mat)->m_kt[2]*refractRatio*transL[2]));
@@ -432,6 +456,7 @@ void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 
 	float rt = -1.f;
 	PhongMaterial *rMat;
 	bool rres = false;
+	float ru, rv;
 
 	if (VarHolder::showGloss && (perturb) >= 0) {
 		int numIter = 4;
@@ -443,17 +468,17 @@ void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 
 
 			if (VarHolder::useSubdivision) {
 				SceneNode *rNode;
-				getClosestObjectPointUseGrid(root, origin, newr, rt, rnorm, rres, &rNode, gridSubdivision);
+				getClosestObjectPointUseGrid(root, origin, newr, rt, rnorm, ru, rv, rres, &rNode, gridSubdivision);
 				if (rres) {
 					GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 					rMat = static_cast<PhongMaterial*>(casted->m_material);
 				}
 			} else {
-				getClosestObjectPoint(root, origin, newr, rt, rnorm, &rMat, rres, glm::mat4(1.f));
+				getClosestObjectPoint(root, origin, newr, rt, rnorm, ru, rv, &rMat, rres, glm::mat4(1.f));
 			}
 			
 			if (rres) {
-				glm::vec3 refL = getColorAtPoint(origin, newr, rt, rnorm, rMat, lights, ambient, root, gridSubdivision, numReflected + 1, numTransmitted);
+				glm::vec3 refL = getColorAtPoint(origin, newr, rt, rnorm, ru, rv, rMat, lights, ambient, root, gridSubdivision, numReflected + 1, numTransmitted);
 				resC[0] += glm::max(0.f, glm::min(1.f, (float) (ks[0])*refL[0]));
 				resC[1] += glm::max(0.f, glm::min(1.f, (float) (ks[1])*refL[1]));
 				resC[2] += glm::max(0.f, glm::min(1.f, (float) (ks[2])*refL[2]));
@@ -465,17 +490,17 @@ void sangReflect(glm::vec3 origin, glm::vec3 slope, glm::vec3 normal, glm::vec3 
 	} else {
 		if (VarHolder::useSubdivision) {
 			SceneNode *rNode;
-			getClosestObjectPointUseGrid(root, origin, r, rt, rnorm, rres, &rNode, gridSubdivision);
+			getClosestObjectPointUseGrid(root, origin, r, rt, rnorm, ru, rv, rres, &rNode, gridSubdivision);
 			if (rres) {
 				GeometryNode *casted = static_cast<GeometryNode*>(rNode);
 				rMat = static_cast<PhongMaterial*>(casted->m_material);
 			}
 		} else {
-			getClosestObjectPoint(root, origin, r, rt, rnorm, &rMat, rres, glm::mat4(1.f));
+			getClosestObjectPoint(root, origin, r, rt, rnorm, ru, rv, &rMat, rres, glm::mat4(1.f));
 		}
 		
 		if (rres) {
-			glm::vec3 refL = getColorAtPoint(origin, r, rt, rnorm, rMat, lights, ambient, root, gridSubdivision, numReflected + 1, numTransmitted);
+			glm::vec3 refL = getColorAtPoint(origin, r, rt, rnorm, ru, rv, rMat, lights, ambient, root, gridSubdivision, numReflected + 1, numTransmitted);
 			resultv[0] += glm::max(0.f, glm::min(1.f, (float) (ks[0])*refL[0]));
 			resultv[1] += glm::max(0.f, glm::min(1.f, (float) (ks[1])*refL[1]));
 			resultv[2] += glm::max(0.f, glm::min(1.f, (float) (ks[2])*refL[2]));

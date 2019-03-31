@@ -217,7 +217,7 @@ Debug/GridSubdivision.o: ../GridSubdivision.cpp \
  ../../shared/include/glm/./gtx/../detail/intrinsic_matrix.inl \
  ../../shared/include/glm/./gtx/simd_mat4.inl ../GridSubdivision.hpp \
  ../Material.hpp ../SceneNode.hpp ../GeometryNode.hpp ../Primitive.hpp \
- ../polyroots.hpp ../PhongMaterial.hpp
+ ../polyroots.hpp ../PhongMaterial.hpp ../Texture.hpp ../Image.hpp
 
 ../../shared/include/glm/ext.hpp:
 
@@ -666,3 +666,7 @@ Debug/GridSubdivision.o: ../GridSubdivision.cpp \
 ../polyroots.hpp:
 
 ../PhongMaterial.hpp:
+
+../Texture.hpp:
+
+../Image.hpp:

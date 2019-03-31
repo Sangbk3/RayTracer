@@ -73,7 +73,16 @@ Debug/PhongMaterial.o: ../PhongMaterial.cpp ../PhongMaterial.hpp \
  ../../shared/include/glm/vector_relational.hpp \
  ../../shared/include/glm/integer.hpp \
  ../../shared/include/glm/detail/func_integer.hpp \
- ../../shared/include/glm/detail/func_integer.inl ../Material.hpp
+ ../../shared/include/glm/detail/func_integer.inl ../Material.hpp \
+ ../Texture.hpp ../Image.hpp \
+ ../../shared/include/glm/gtx/rotate_vector.hpp \
+ ../../shared/include/glm/gtx/../gtx/transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/../gtc/constants.hpp \
+ ../../shared/include/glm/gtx/../gtx/../gtc/../gtc/constants.inl \
+ ../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl \
+ ../../shared/include/glm/gtx/../gtx/transform.inl \
+ ../../shared/include/glm/gtx/rotate_vector.inl
 
 ../PhongMaterial.hpp:
 
@@ -228,3 +237,23 @@ Debug/PhongMaterial.o: ../PhongMaterial.cpp ../PhongMaterial.hpp \
 ../../shared/include/glm/detail/func_integer.inl:
 
 ../Material.hpp:
+
+../Texture.hpp:
+
+../Image.hpp:
+
+../../shared/include/glm/gtx/rotate_vector.hpp:
+
+../../shared/include/glm/gtx/../gtx/transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/../gtc/constants.hpp:
+
+../../shared/include/glm/gtx/../gtx/../gtc/../gtc/constants.inl:
+
+../../shared/include/glm/gtx/../gtx/../gtc/matrix_transform.inl:
+
+../../shared/include/glm/gtx/../gtx/transform.inl:
+
+../../shared/include/glm/gtx/rotate_vector.inl:

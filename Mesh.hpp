@@ -38,7 +38,8 @@ private:
 
     friend std::ostream& operator<<(std::ostream& out, const Mesh& mesh);
 
-    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal) override;
+    bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) override;
 	bool intersectsBoundingBox(glm::vec3 origin, glm::vec3 slope);
 	bool intersectsBoundingBoxAndGetData(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal);
+    void getUV(glm::vec3 &at, float &u, float &v);
 };

@@ -26,4 +26,5 @@ void GeometryNode::setMaterial( Material *mat )
 	//     crash the program.
 
 	m_material = mat;
+	m_primitive->setMaterial(mat);
 }
