@@ -426,8 +426,7 @@ int gr_render_cmd(lua_State* L)
   }
 
 	Image im( width, height);
-	A5_Render(root->node, im, eye, view, up, fov, ambient, lights);
-    im.savePng( filename );
+	A5_Render(root->node, im, eye, view, up, fov, ambient, lights, filename);
 
 	return 0;
 }
@@ -523,6 +522,40 @@ int gr_node_add_child_cmd(lua_State* L)
   SceneNode* child = childdata->node;
 
   self->add_child(child);
+
+  return 0;
+}
+
+// Add a Child to a node
+extern "C"
+int gr_node_add_key_frame_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  SceneNode* self = selfdata->node;
+  
+  gr_node_ud* keychild = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, keychild != 0, 2, "Node expected");
+
+  SceneNode* key = keychild->node;
+
+  double trans[3], scale[3], rot[3];
+  get_tuple(L, 3, trans, 3);
+  get_tuple(L, 4, scale, 3);
+  get_tuple(L, 5, rot, 3);
+
+  double etrans[3], escale[3], erot[3];
+  get_tuple(L, 6, etrans, 3);
+  get_tuple(L, 7, escale, 3);
+  get_tuple(L, 8, erot, 3);
+
+  self->add_key(
+    key, glm::vec3(trans[0], trans[1], trans[2]), glm::vec3(scale[0], scale[1], scale[2]),
+    glm::vec3(rot[0], rot[1], rot[2]), glm::vec3(etrans[0], etrans[1], etrans[2]),
+    glm::vec3(escale[0], escale[1], escale[2]), glm::vec3(erot[0], erot[1], erot[2]));
 
   return 0;
 }
@@ -724,6 +757,7 @@ static const luaL_Reg grlib_functions[] = {
 static const luaL_Reg grlib_node_methods[] = {
   {"__gc", gr_node_gc_cmd},
   {"add_child", gr_node_add_child_cmd},
+  {"add_key", gr_node_add_key_frame_cmd},
   {"set_material", gr_node_set_material_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},

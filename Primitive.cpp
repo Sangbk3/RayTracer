@@ -229,7 +229,7 @@ void NonhierSphere::getUV(glm::vec3 &at, float &u, float &v) {
 }
 
 void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &normal) {
-    float epsilon = 0.005;
+    float epsilon = 0.0001;
 
     float theta;
     glm::vec3 diff = at - m_pos;
@@ -242,7 +242,7 @@ void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &no
     u = (theta + PI) / (2*PI);
     v = phi/PI;
     
-    float scale = (2048.f/material->bump->texture->width());
+    float scale = 1;
     u = u*scale;
     v = v*scale;
 

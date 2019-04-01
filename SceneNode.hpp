@@ -10,10 +10,22 @@
 #include <string>
 #include <iostream>
 
+class SceneNode;
+
 enum class NodeType {
 	SceneNode,
 	GeometryNode,
 	JointNode
+};
+
+struct KeyFrame {
+    SceneNode* key;
+    glm::vec3 translate;
+    glm::vec3 scale;
+    glm::vec3 rotate;
+    glm::vec3 etranslate;
+    glm::vec3 escale;
+    glm::vec3 erotate;
 };
 
 class SceneNode {
@@ -32,6 +44,9 @@ public:
     void set_transform(const glm::mat4& m);
     
     void add_child(SceneNode* child);
+
+    void add_key(SceneNode* key, glm::vec3 translate, glm::vec3 scale, glm::vec3 rotate,
+	    glm::vec3 etranslate, glm::vec3 escale, glm::vec3 erotate);
     
     void remove_child(SceneNode* child);
 
@@ -48,6 +63,7 @@ public:
     glm::mat4 invtrans;
     
     std::list<SceneNode*> children;
+    std::list<KeyFrame*> keyFrames;
 
 	NodeType m_nodeType;
 	std::string m_name;

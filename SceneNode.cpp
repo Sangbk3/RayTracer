@@ -71,6 +71,20 @@ void SceneNode::add_child(SceneNode* child) {
 	children.push_back(child);
 }
 
+void SceneNode::add_key(
+	SceneNode* key, glm::vec3 translate, glm::vec3 scale, glm::vec3 rotate,
+	glm::vec3 etranslate, glm::vec3 escale, glm::vec3 erotate) {
+	KeyFrame *keyframe = new KeyFrame();
+	keyframe->key = key;
+	keyframe->translate = translate;
+	keyframe->scale = scale;
+	keyframe->rotate = rotate;
+	keyframe->etranslate = etranslate;
+	keyframe->escale = escale;
+	keyframe->erotate = erotate;
+	keyFrames.push_back(keyframe);
+}
+
 //---------------------------------------------------------------------------------------
 void SceneNode::remove_child(SceneNode* child) {
 	children.remove(child);

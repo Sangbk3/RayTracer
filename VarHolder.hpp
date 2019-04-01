@@ -23,6 +23,9 @@ class VarHolder {
 	static bool usePointMass;
 	static int pmCoeff;
 
+	static int frameNumber;
+	static bool animateKeyframe;
+
 	static std::uniform_real_distribution<> dist;
 	static std::mt19937 generator;
 };

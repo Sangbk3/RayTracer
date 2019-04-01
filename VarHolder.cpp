@@ -18,5 +18,7 @@ bool VarHolder::usePointMass = false;
 int VarHolder::pmCoeff = 1;
 
 int VarHolder::time = 0;
+int VarHolder::frameNumber = 1;
+bool VarHolder::animateKeyframe = false;
 std::uniform_real_distribution<> VarHolder::dist(0, 1);
 std::mt19937 VarHolder::generator;

@@ -25,7 +25,8 @@ void A5_Render(
 
 		// Lighting parameters  
 		const glm::vec3 & ambient,
-		const std::list<Light *> & lights
+		const std::list<Light *> & lights,
+		const char* filename
 ) {
 	std::vector<std::thread> myThreads;
 
@@ -33,82 +34,103 @@ void A5_Render(
 		l->position[0] += VarHolder::time;
 	}
 
-	int pwidth = image.width()*VarHolder::supersample;
-	int pheight = image.height()*VarHolder::supersample;
-	numPixels = pwidth * pheight;
-	progress = 0;
-
-	std::cout << VarHolder::depthoffield << std::endl;
-
-	glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
-
-	size_t h = image.height() * VarHolder::supersample;
-	size_t w = image.width() * VarHolder::supersample;
-	vec3 *pixelColors = new vec3[w*h];
-
-	GridSubdivision *gridSubdivision;
-
-	if (VarHolder::useSubdivision) {
-		gridSubdivision = new GridSubdivision(root, VarHolder::subdivideDepth, eye, view, fovy, pwidth / pheight);
-	}
-
-    auto start = std::chrono::system_clock::now();
-	system("setterm -cursor off");
-
-
-	if (VarHolder::useThread) {
-		cout << "Initializing threads... " << endl;
-		ThreadPool threadPool(256);
-
-		for (uint x = 0; x < w; ++x) {
-			std::thread t(setPixelOfImage, pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
-			myThreads.push_back(std::move(t));
-		}
-
-		for (int i = 0; i < myThreads.size(); i++)
-		{
-			std::thread & th = myThreads.at(i);
-			if (th.joinable()) {
-				th.join();
-				myThreads.erase(myThreads.begin() + i);
-
-				i--;
+	for (int f = 0; f < VarHolder::frameNumber; f++) {
+		if (VarHolder::animateKeyframe) {
+			float interpolate = ((float) f)/VarHolder::frameNumber;
+			interpolate = (cos(interpolate*PI*2) + 1)/2.f;
+			for (KeyFrame *keyframe : root->keyFrames) {
+				vec3 curTranslate = keyframe->translate + (keyframe->etranslate - keyframe->translate)*interpolate;
+				vec3 curScale = keyframe->scale + (keyframe->escale - keyframe->scale)*interpolate;
+				vec3 curTrans = keyframe->translate + (keyframe->etranslate - keyframe->translate)*interpolate;
+				keyframe->key->set_transform(mat4(1.f));
+				keyframe->key->scale(curScale);
+				keyframe->key->translate(curTranslate);
+				// cout << glm::to_string(curScale) << " : " <<glm::to_string(keyframe->scale) << " : " << glm::to_string(keyframe->escale) << endl;
+				//handle rotation
 			}
 		}
-	} else {
-		for (uint x = 0; x < w; ++x) {
-			setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
-		}
-	}
 
-	for (uint y = 0; y < image.height(); ++y) {
-		for (uint x = 0; x < image.width(); ++x) {
-			glm::vec3 pColor = glm::vec3(0);
-			for (int dy = 0; dy < VarHolder::supersample; dy++) {
-				for (int dx = 0; dx < VarHolder::supersample; dx++) {
-					pColor += pixelColors[(y*VarHolder::supersample + dy)*w + (x*VarHolder::supersample + dx)];
+		int pwidth = image.width()*VarHolder::supersample;
+		int pheight = image.height()*VarHolder::supersample;
+		numPixels = pwidth * pheight;
+		progress = 0;
+
+		std::cout << VarHolder::depthoffield << std::endl;
+
+		glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
+
+		size_t h = image.height() * VarHolder::supersample;
+		size_t w = image.width() * VarHolder::supersample;
+		vec3 *pixelColors = new vec3[w*h];
+
+		GridSubdivision *gridSubdivision;
+
+		if (VarHolder::useSubdivision) {
+			gridSubdivision = new GridSubdivision(root, VarHolder::subdivideDepth, eye, view, fovy, pwidth / pheight);
+		}
+
+		auto start = std::chrono::system_clock::now();
+		system("setterm -cursor off");
+
+
+		if (VarHolder::useThread) {
+			cout << "Initializing threads... " << endl;
+			ThreadPool threadPool(256);
+
+			for (uint x = 0; x < w; ++x) {
+				std::thread t(setPixelOfImage, pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
+				myThreads.push_back(std::move(t));
+			}
+
+			for (int i = 0; i < myThreads.size(); i++)
+			{
+				std::thread & th = myThreads.at(i);
+				if (th.joinable()) {
+					th.join();
+					myThreads.erase(myThreads.begin() + i);
+
+					i--;
 				}
 			}
-
-			pColor = pColor / pow(VarHolder::supersample, 2);
-			// Red: 
-			image(x, y, 0) = (double)pColor[0];
-			// Green: 
-			image(x, y, 1) = (double)pColor[1];
-			// Blue: 
-			image(x, y, 2) = (double)pColor[2];
+		} else {
+			for (uint x = 0; x < w; ++x) {
+				setPixelOfImage(pixelToWorldTransform, x, h, pixelColors, eye, root, lights, ambient, gridSubdivision);
+			}
 		}
+
+		for (uint y = 0; y < image.height(); ++y) {
+			for (uint x = 0; x < image.width(); ++x) {
+				glm::vec3 pColor = glm::vec3(0);
+				for (int dy = 0; dy < VarHolder::supersample; dy++) {
+					for (int dx = 0; dx < VarHolder::supersample; dx++) {
+						pColor += pixelColors[(y*VarHolder::supersample + dy)*w + (x*VarHolder::supersample + dx)];
+					}
+				}
+
+				pColor = pColor / pow(VarHolder::supersample, 2);
+				// Red: 
+				image(x, y, 0) = (double)pColor[0];
+				// Green: 
+				image(x, y, 1) = (double)pColor[1];
+				// Blue: 
+				image(x, y, 2) = (double)pColor[2];
+			}
+		}
+
+		auto end = std::chrono::system_clock::now();
+
+		std::chrono::duration<double> elapsed_seconds = end-start;
+		std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+		std::cout << "\rFinished computation at " << std::ctime(&end_time)
+				<< "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+		system("setterm -cursor on");
+
+		std::string fname = filename;
+		fname.insert(fname.find(".png"), std::to_string(f));
+    	image.savePng( fname );
 	}
-
-    auto end = std::chrono::system_clock::now();
-
-	std::chrono::duration<double> elapsed_seconds = end-start;
-    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
-    std::cout << "\rFinished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
-	system("setterm -cursor on");
 }
 
 void setPixelOfImage(

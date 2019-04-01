@@ -81,6 +81,14 @@ int main(int argc, char** argv)
           i++;
         }
       }
+
+      if (std::string(argv[i]) == "-frame") {
+        if (i + 1 < argc) {
+          VarHolder::frameNumber = std::stoi(std::string(argv[i+1]));
+          VarHolder::animateKeyframe = true;
+          i++;
+        }
+      }
     }
   }
 
