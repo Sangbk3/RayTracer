@@ -526,7 +526,26 @@ int gr_node_add_child_cmd(lua_State* L)
   return 0;
 }
 
-// Add a Child to a node
+// Add a skybox to a node
+extern "C"
+int gr_node_add_skybox_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+  
+  gr_node_ud* childdata = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, childdata != 0, 2, "Node expected");
+
+  GeometryNode* child = dynamic_cast<GeometryNode*>(childdata->node);
+
+  selfdata->node->add_skybox(child);
+
+  return 0;
+}
+
+// Add a keyframe to a node
 extern "C"
 int gr_node_add_key_frame_cmd(lua_State* L)
 {
@@ -552,10 +571,18 @@ int gr_node_add_key_frame_cmd(lua_State* L)
   get_tuple(L, 7, escale, 3);
   get_tuple(L, 8, erot, 3);
 
+  double startTime = luaL_checknumber(L, 9);
+  double duration = luaL_checknumber(L, 10);
+  double repeat = luaL_checknumber(L, 11);
+  // modes: accelerate decelerate = 2, accelerate = 0, decelerate = 1;
+  double interpolateMode = luaL_checknumber(L, 12);
+  double interpolate = luaL_checknumber(L, 13);
+
   self->add_key(
     key, glm::vec3(trans[0], trans[1], trans[2]), glm::vec3(scale[0], scale[1], scale[2]),
     glm::vec3(rot[0], rot[1], rot[2]), glm::vec3(etrans[0], etrans[1], etrans[2]),
-    glm::vec3(escale[0], escale[1], escale[2]), glm::vec3(erot[0], erot[1], erot[2]));
+    glm::vec3(escale[0], escale[1], escale[2]), glm::vec3(erot[0], erot[1], erot[2]),
+    startTime, duration, repeat, interpolateMode, interpolate);
 
   return 0;
 }
@@ -579,6 +606,25 @@ int gr_node_set_material_cmd(lua_State* L)
   Material* material = matdata->material;
 
   self->setMaterial(material);
+
+  return 0;
+}
+
+// Set a node's Material
+extern "C"
+int gr_node_set_uv_scale_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  GeometryNode* self = dynamic_cast<GeometryNode*>(selfdata->node);
+
+  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+  
+  double scale = luaL_checknumber(L, 2);
+  self->setScaleUV(scale);
 
   return 0;
 }
@@ -757,8 +803,10 @@ static const luaL_Reg grlib_functions[] = {
 static const luaL_Reg grlib_node_methods[] = {
   {"__gc", gr_node_gc_cmd},
   {"add_child", gr_node_add_child_cmd},
+  {"add_skybox", gr_node_add_skybox_cmd},
   {"add_key", gr_node_add_key_frame_cmd},
   {"set_material", gr_node_set_material_cmd},
+  {"set_uvscale", gr_node_set_uv_scale_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},
   {"translate", gr_node_translate_cmd},

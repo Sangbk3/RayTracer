@@ -12,7 +12,9 @@ public:
 		Material *mat = nullptr );
 
 	void setMaterial( Material *material );
+	void setScaleUV(float scale);
 
 	Material *m_material;
 	Primitive *m_primitive;
+	float scaleuv;
 };

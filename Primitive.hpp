@@ -20,6 +20,7 @@ class Primitive {
     NonhierSphere *boundingSphere;
     PhongMaterial *material;
     bool hasMaterial = false;
+    float uvScale = 1;
 };
 
 class Sphere : public Primitive {
@@ -45,7 +46,7 @@ class NonhierSphere : public Primitive {
     virtual ~NonhierSphere();
     bool intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm::vec3 &normal, float &u, float &v) override;
     void getUV(glm::vec3 &at, float &u, float &v);
-    void getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &normal);
+    void getUVNormal(glm::vec3 &at, float u, float v, glm::vec3 &normal);
     glm::vec3 m_pos;
     double m_radius;
 };

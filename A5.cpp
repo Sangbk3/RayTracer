@@ -34,17 +34,55 @@ void A5_Render(
 		l->position[0] += VarHolder::time;
 	}
 
+	std::vector<TransformInfo> originalT;
+	for (KeyFrame *keyframe : root->keyFrames) {
+		originalT.push_back(keyframe->key->getTransInfo());
+	}
+
+	float originalpmc = VarHolder::pmCoeff;
 	for (int f = 0; f < VarHolder::frameNumber; f++) {
+		VarHolder::pmCoeff = originalpmc * (f + 1);
 		if (VarHolder::animateKeyframe) {
-			float interpolate = ((float) f)/VarHolder::frameNumber;
-			interpolate = (cos(interpolate*PI*2) + 1)/2.f;
+			cout << "Rendering Frame #" << f << endl;
+			float timef = ((float) f)/VarHolder::frameNumber;
+
+			for (int kt = 0; kt < root->keyFrames.size(); kt++) {
+				root->keyFrames.at(kt)->key->setTransInfo(originalT.at(kt));
+			}
+
 			for (KeyFrame *keyframe : root->keyFrames) {
-				vec3 curTranslate = keyframe->translate + (keyframe->etranslate - keyframe->translate)*interpolate;
-				vec3 curScale = keyframe->scale + (keyframe->escale - keyframe->scale)*interpolate;
-				vec3 curTrans = keyframe->translate + (keyframe->etranslate - keyframe->translate)*interpolate;
-				keyframe->key->set_transform(mat4(1.f));
-				keyframe->key->scale(curScale);
+				float localt;
+				float scaledTime = timef * keyframe->repeat;
+				while (scaledTime >= 1) {
+					scaledTime -= 1;
+				}
+				float stime = keyframe->stime;
+				float duration = keyframe->duration;
+
+				localt = std::min(1.f, std::max(0.f, (scaledTime - stime)/duration));
+				//Accelerate
+				if (keyframe->iMode == 0) {
+					localt = pow(localt, keyframe->interpolate);
+				}
+				//Decelerate
+				else if (keyframe->iMode == 1) {
+					localt = 2*localt - pow(localt, keyframe->interpolate);
+				}
+				//Accel then Decel
+				else if (keyframe->iMode == 2) {
+					localt = pow(((-cos(localt*PI) + 1)/2.f), keyframe->interpolate);
+				}
+
+				vec3 curTranslate = (keyframe->etranslate - keyframe->translate)*localt;
+				vec3 curScale = (keyframe->escale - keyframe->scale)*localt;
+				vec3 curRot = (keyframe->erotate - keyframe->rotate)*localt;
+
+				keyframe->key->add_scale(curScale);
+				keyframe->key->add_rotate(curRot);
 				keyframe->key->translate(curTranslate);
+
+					
+
 				// cout << glm::to_string(curScale) << " : " <<glm::to_string(keyframe->scale) << " : " << glm::to_string(keyframe->escale) << endl;
 				//handle rotation
 			}
@@ -54,8 +92,6 @@ void A5_Render(
 		int pheight = image.height()*VarHolder::supersample;
 		numPixels = pwidth * pheight;
 		progress = 0;
-
-		std::cout << VarHolder::depthoffield << std::endl;
 
 		glm::mat4 pixelToWorldTransform = getPixelToWorldTransform(image, fovy, view, up, eye);
 
@@ -204,7 +240,7 @@ void setPixelOfImage(
 			float u, v;
 			bool result = false;
 
-			if (VarHolder::usePointMass) {
+			if (VarHolder::usePointMass && root->hasSkybox) {
 				glm::vec3 lcol = vec3(0.0);
 				for (Light *l : lights) {
 					if (l->hasPointMass) {
@@ -212,25 +248,43 @@ void setPixelOfImage(
 
 						vec3 y0 = eye;
 						vec3 m0 = m;
-						float dt = 10;
-						float counter = 1000;
+						float dt = 30;
+						float counter = 3000;
 
 						glm::vec3 tempnorm = glm::vec3();
-						float tempt = -1.f;
+						double tempt = -1;
 						float tempu, tempv;
-						PhongMaterial *tempmat;
+						PhongMaterial *tempmat = static_cast<PhongMaterial*>(root->skybox->m_material);
 						bool tempr = false;
 
 						while (counter > 0) {
 							tempt = -1.f;
 							tempr = false;
-							getClosestObjectPoint(root, y0, m0, tempt, tempnorm, tempu, tempv, &tempmat, tempr, mat4(1.f));
-							if (tempr && tempt > 0 && tempt <= dt) {
-								if (tempmat->hasTexture) {
-									lcol = tempmat->texture->getColorAtUV(tempu, tempv);
+							// getClosestObjectPoint(root, y0, m0, tempt, tempnorm, tempu, tempv, &tempmat, tempr, mat4(1.f));
+
+							// if (tempr && tempt > 0 && tempt <= dt) {
+							// 	if (tempmat->hasTexture) {
+							// 		lcol = getColorAtPoint(y0, m0, tempt, tempnorm, tempu, tempv, tempmat, lights, ambient, root, gridSubdivision, 0, 0);
+							// 	} else {
+							// 		lcol = tempmat->m_kd;
+							// 	}
+							// 	break;
+							// }
+
+							if (root->skybox->m_primitive->intersects(y0, m0, tempt, tempnorm, tempu, tempv) && tempt > 0 && tempt <= dt) {
+								vec3 poisky = y0 + m0 * tempt;
+								if (m[2] >= 0 && poisky[2] < eye[2] || m[2] < 0 && poisky[2] > eye[2]) {
+									break;
 								} else {
-									lcol = tempmat->m_kd;
+									if (VarHolder::useTexture && tempmat->hasTexture) {
+										tempu *= tempu * root->skybox->scaleuv;
+										tempv *= tempv * root->skybox->scaleuv;
+										lcol = getColorAtPoint(y0, m0, tempt, tempnorm, tempu, tempv, tempmat, lights, ambient, root, gridSubdivision, 0, 0);
+									} else {
+										lcol = tempmat->m_kd;
+									}
 								}
+
 								break;
 							}
 							
@@ -243,37 +297,60 @@ void setPixelOfImage(
 				pixelColors[y*h + x][0] = lcol[0];
 				pixelColors[y*h + x][1] = lcol[1];
 				pixelColors[y*h + x][2] = lcol[2];
-			} else {
-				if (VarHolder::useSubdivision) {
-					SceneNode *rNode;
-					getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+			} 
 
-					if (result) {
-						GeometryNode *casted = static_cast<GeometryNode*>(rNode);
-						mat = static_cast<PhongMaterial*>(casted->m_material);
-					}
-				} else {
-					getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
+			if (VarHolder::useSubdivision) {
+				SceneNode *rNode;
+				getClosestObjectPointUseGrid(root, eye, m, t, normal, u, v, result, &rNode, gridSubdivision);
+
+				if (result) {
+					GeometryNode *casted = static_cast<GeometryNode*>(rNode);
+					mat = static_cast<PhongMaterial*>(casted->m_material);
 				}
+			} else {
+				getClosestObjectPoint(root, eye, m, t, normal, u, v, &mat, result, glm::mat4(1.f));
+			}
 
-				if (!result) {
+			if (!result) {
+				if (!VarHolder::usePointMass) {
+					if (root->hasSkybox) {
+						double skyt = -1;
+						mat = static_cast<PhongMaterial*>(root->skybox->m_material);
+
+						if (root->skybox->m_primitive->intersects(eye, m, skyt, normal, u, v) && skyt > 0) {
+							glm::vec3 colorHere;
+							if (VarHolder::useTexture && mat->hasTexture) {
+								float nu = u * root->skybox->scaleuv;
+								float nv = v * root->skybox->scaleuv;
+								colorHere = getColorAtPoint(eye, m, skyt, normal, nu, nv, mat, lights, ambient, root, gridSubdivision, 0, 0);
+							} else {
+								colorHere = mat->m_kd;
+							}
+							pixelColors[y*h + x][0] = colorHere[0];
+							pixelColors[y*h + x][1] = colorHere[1];
+							pixelColors[y*h + x][2] = colorHere[2];
+						} else {
+							pixelColors[y*h + x][0] = 0.2;
+							pixelColors[y*h + x][1] = 0.7;
+							pixelColors[y*h + x][2] = 0.7;
 					// pixelColors[y*h + x][0] = 1 - std::min(((double) y)/h, 0.5);
 					// pixelColors[y*h + x][1] = std::max(((double) y)/h, 0.5);
 					// pixelColors[y*h + x][2] = std::max(0.4 - ((double) y)/h, 0.2);
-
-					pixelColors[y*h + x][0] = 0.2;
-					pixelColors[y*h + x][1] = 0.7;
-					pixelColors[y*h + x][2] = 0.7;
-
-				} else {
-					glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
-					if (VarHolder::showNormal) {
-						colorHere = normal;
+						}
+					} else {
+						pixelColors[y*h + x][0] = 0.2;
+						pixelColors[y*h + x][1] = 0.7;
+						pixelColors[y*h + x][2] = 0.7;
 					}
-					pixelColors[y*h + x][0] = colorHere[0];
-					pixelColors[y*h + x][1] = colorHere[1];
-					pixelColors[y*h + x][2] = colorHere[2];
 				}
+			} else {
+				glm::vec3 colorHere = getColorAtPoint(eye, m, t, normal, u, v, mat, lights, ambient, root, gridSubdivision, 0, 0);
+				if (VarHolder::showNormal) {
+					colorHere = normal;
+				}
+				pixelColors[y*h + x][0] = colorHere[0];
+				pixelColors[y*h + x][1] = colorHere[1];
+				pixelColors[y*h + x][2] = colorHere[2];
 			}
 		}
 
@@ -300,7 +377,6 @@ void rungekutta(glm::vec3 &yn, glm::vec3 &mn, float dt, PointMass *pmass) {
 glm::vec3 getForceField(float t, glm::vec3 y, glm::vec3 m, glm::vec3 mass) {
 	float h = pow(VarHolder::pmCoeff, 4);
 	glm::vec3 ymass = mass - y;
-	// glm::vec3 accel = PotentialCoefficient * h2 * point / (float)Math.Pow(point.LengthSquared(), 2.5);
 
 	return -t*(3.0/2)*pow(h, 2)*(1/pow(glm::length2(ymass),5))*glm::normalize(ymass);
 }
@@ -328,13 +404,13 @@ void getClosestObjectPoint(
 		GeometryNode *casted = static_cast<GeometryNode*>(node);
 		float tu, tv;
 
-		if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn, tu, tv) && temp > 0.01) {
+		if ((*casted).m_primitive->intersects(invOrigin, invSlope, temp, tempn, tu, tv) && temp > 0.1) {
 			if (!result || t > temp) {
 				t = temp;
 				normal = glm::normalize(glm::vec3(glm::transpose(newT) * glm::vec4(tempn, 0)));
 				*mat = static_cast<PhongMaterial*>(casted->m_material);
-				u = tu;
-				v = tv;
+				u = tu * casted->scaleuv;
+				v = tv * casted->scaleuv;
 
 				result = true;
 			}
@@ -384,6 +460,7 @@ glm::vec3 getColorAtPoint(
 	if (glm::length2((mat)->m_kd) != 0) {
 		for (Light * l : lights) {
 			if (VarHolder::softenShadow && l->radius > 0) {
+				cout << "meh" << endl;
 				int numIter = 15;
 				glm::vec3 resC = glm::vec3(0);
 

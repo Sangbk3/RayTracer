@@ -14,6 +14,7 @@ int VarHolder::supersample = 1;
 bool VarHolder::useBumpmap = false;
 bool VarHolder::useDepthoffield = false;
 float VarHolder::depthoffield = 0;
+float VarHolder::bumpEpsilon = 0.0001;
 bool VarHolder::usePointMass = false;
 int VarHolder::pmCoeff = 1;
 

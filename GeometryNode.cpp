@@ -10,6 +10,7 @@ GeometryNode::GeometryNode(
 	, m_primitive( prim )
 {
 	m_nodeType = NodeType::GeometryNode;
+	scaleuv = 1;
 }
 
 void GeometryNode::setMaterial( Material *mat )
@@ -27,4 +28,9 @@ void GeometryNode::setMaterial( Material *mat )
 
 	m_material = mat;
 	m_primitive->setMaterial(mat);
+}
+
+void GeometryNode::setScaleUV(float scale) {
+	scaleuv = scale;
+	m_primitive->uvScale = scale;
 }

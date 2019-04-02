@@ -57,8 +57,12 @@ int main(int argc, char** argv)
           i++;
         }
       }
-      if (std::string(argv[i]) == "-b") {
+      if (std::string(argv[i]) == "-bb") {
         VarHolder::useBumpmap = true;
+        if (i + 1 < argc) {
+          VarHolder::bumpEpsilon = std::stod(std::string(argv[i+1]));
+          i++;
+        }
       }
       if (std::string(argv[i]) == "-d") {
         if (i + 1 < argc) {

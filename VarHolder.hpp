@@ -18,6 +18,7 @@ class VarHolder {
 	static int time;
 	static int supersample;
 	static bool useBumpmap;
+	static float bumpEpsilon;
 	static bool useDepthoffield;
 	static float depthoffield;
 	static bool usePointMass;

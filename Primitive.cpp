@@ -91,7 +91,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
         if (hasMaterial && VarHolder::useBumpmap && material->hasBump) {
-            getUVNormal(poi, u, v, normal);
+            getUVNormal(poi, u*uvScale, v*uvScale, normal);
         } else {
             getUV(poi, u, v);
         }
@@ -108,7 +108,7 @@ bool NonhierSphere::intersects(glm::vec3 origin, glm::vec3 slope, double &t, glm
         glm::vec3 poi = origin + slope*((float) t);
         normal = glm::normalize(ori + slope*((float) t));
         if (hasMaterial && VarHolder::useBumpmap && material->hasBump) {
-            getUVNormal(poi, u, v, normal);
+            getUVNormal(poi, u*uvScale, v*uvScale, normal);
         } else {
             getUV(poi, u, v);
         }
@@ -228,8 +228,8 @@ void NonhierSphere::getUV(glm::vec3 &at, float &u, float &v) {
     v = phi/PI;
 }
 
-void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &normal) {
-    float epsilon = 0.0001;
+void NonhierSphere::getUVNormal(glm::vec3 &at, float u, float v, glm::vec3 &normal) {
+    float epsilon = VarHolder::bumpEpsilon;
 
     float theta;
     glm::vec3 diff = at - m_pos;
@@ -241,16 +241,12 @@ void NonhierSphere::getUVNormal(glm::vec3 &at, float &u, float &v, glm::vec3 &no
     float phi = acos(std::min(1.0, std::max(-1.0, -(diff[1])/m_radius)));
     u = (theta + PI) / (2*PI);
     v = phi/PI;
-    
-    float scale = 1;
-    u = u*scale;
-    v = v*scale;
 
     glm::vec3 pu = glm::vec3(-sin(theta), 0, cos(theta));
     glm::vec3 pv = glm::cross(normal, pu);
 
-    float uep = u + epsilon*scale;
-    float vep = v + epsilon*scale;
+    float uep = u + epsilon;
+    float vep = v + epsilon;
 
     float du = glm::length2(material->bump->getColorAtUV(u, v)) - glm::length2(material->bump->getColorAtUV(uep, v));
     float dv = glm::length2(material->bump->getColorAtUV(u, v)) - glm::length2(material->bump->getColorAtUV(u, vep));

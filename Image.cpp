@@ -142,7 +142,6 @@ bool Image::loadPng(const std::string & filename) {
 
   m_height = height;
   m_width = width;
-  std::cout << width << " " << height << std::endl;
   
 	size_t numElements = m_width * m_height * m_colorComponents;
 	m_data = new double[numElements];
